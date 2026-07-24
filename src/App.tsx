@@ -97,7 +97,7 @@ export default function App() {
     return <div className="app-shell"><OnboardingScreen onCreateTrip={handleCreateNewTrip} onImportTrip={handleImportTrip} /></div>;
   }
 
-  const memberBalances = calculateMemberBalances(activeTrip.members, activeTrip.expenses, activeTrip.exchangeRates.rates);
+  const memberBalances = calculateMemberBalances(activeTrip.members, activeTrip.expenses, activeTrip.exchangeRates.rates, displayCurrency);
   const debtSettlements = simplifyDebts(memberBalances, activeTrip.exchangeRates.rates);
   const filteredExpenses = activeTrip.expenses.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'all' || e.category === selectedCategory) && (selectedMember === 'all' || e.paidByMemberId === selectedMember));
 

@@ -1,47 +1,48 @@
-import type { Member, Expense, MemberBalance, DebtSettlement, SplitShare } from '../types';
+import type { Member, Expense, MemberBalance, DebtSettlement, SplitShare, CurrencyCode } from '../types';
 import { convertCurrency } from './currencyService';
 
 export function calculateMemberBalances(
   members: Member[],
   expenses: Expense[],
-  customRates?: Record<string, number>
+  customRates?: Record<string, number>,
+  displayCurrency: CurrencyCode = 'USD'
 ): MemberBalance[] {
-  const balances: Record<string, { paidISK: number; paidUSD: number; shareISK: number; shareUSD: number }> = {};
+  const balances: Record<string, { paid: number; share: number }> = {};
 
   members.forEach((m) => {
-    balances[m.id] = { paidISK: 0, paidUSD: 0, shareISK: 0, shareUSD: 0 };
+    balances[m.id] = { paid: 0, share: 0 };
   });
 
   expenses.forEach((e) => {
-    const paidISK = convertCurrency(e.amount, e.currency, 'ISK', customRates);
-    const paidUSD = convertCurrency(e.amount, e.currency, 'USD', customRates);
+    const paidInDisplay = convertCurrency(e.amount, e.currency, displayCurrency, customRates);
 
     if (balances[e.paidByMemberId]) {
-      balances[e.paidByMemberId].paidISK += paidISK;
-      balances[e.paidByMemberId].paidUSD += paidUSD;
+      balances[e.paidByMemberId].paid += paidInDisplay;
     }
 
     e.splits.forEach((s: SplitShare) => {
       if (balances[s.memberId]) {
-        const sISK = convertCurrency(s.amount, e.currency, 'ISK', customRates);
-        const sUSD = convertCurrency(s.amount, e.currency, 'USD', customRates);
-        balances[s.memberId].shareISK += sISK;
-        balances[s.memberId].shareUSD += sUSD;
+        const shareInDisplay = convertCurrency(s.amount, e.currency, displayCurrency, customRates);
+        balances[s.memberId].share += shareInDisplay;
       }
     });
   });
 
   return members.map((m) => {
-    const b = balances[m.id] || { paidISK: 0, paidUSD: 0, shareISK: 0, shareUSD: 0 };
+    const b = balances[m.id] || { paid: 0, share: 0 };
+    const net = b.paid - b.share;
+    const isRounded = displayCurrency === 'ISK' || displayCurrency === 'JPY' || displayCurrency === 'HUF';
+    const roundedNet = isRounded ? Math.round(net) : Math.round(net * 100) / 100;
+
     return {
       memberId: m.id,
       memberName: m.name,
-      totalPaidISK: b.paidISK,
-      totalPaidUSD: b.paidUSD,
-      totalShareISK: b.shareISK,
-      totalShareUSD: b.shareUSD,
-      netBalanceISK: Math.round(b.paidISK - b.shareISK),
-      netBalanceUSD: Math.round((b.paidUSD - b.shareUSD) * 100) / 100,
+      totalPaidISK: b.paid,
+      totalPaidUSD: b.paid,
+      totalShareISK: b.share,
+      totalShareUSD: b.share,
+      netBalanceISK: roundedNet,
+      netBalanceUSD: roundedNet,
     };
   });
 }
@@ -51,12 +52,12 @@ export function simplifyDebts(
   customRates?: Record<string, number>
 ): DebtSettlement[] {
   const debtors = memberBalances
-    .filter((b) => b.netBalanceISK < -5)
+    .filter((b) => b.netBalanceISK < -0.05)
     .map((b) => ({ id: b.memberId, name: b.memberName, amount: -b.netBalanceISK }))
     .sort((a, b) => b.amount - a.amount);
 
   const creditors = memberBalances
-    .filter((b) => b.netBalanceISK > 5)
+    .filter((b) => b.netBalanceISK > 0.05)
     .map((b) => ({ id: b.memberId, name: b.memberName, amount: b.netBalanceISK }))
     .sort((a, b) => b.amount - a.amount);
 
@@ -67,25 +68,24 @@ export function simplifyDebts(
   while (i < debtors.length && j < creditors.length) {
     const debtor = debtors[i];
     const creditor = creditors[j];
-    const settlementISK = Math.min(debtor.amount, creditor.amount);
+    const settlementVal = Math.min(debtor.amount, creditor.amount);
 
-    if (settlementISK > 1) {
-      const settlementUSD = convertCurrency(settlementISK, 'ISK', 'USD', customRates);
+    if (settlementVal > 0.01) {
       settlements.push({
         fromMemberId: debtor.id,
         fromMemberName: debtor.name,
         toMemberId: creditor.id,
         toMemberName: creditor.name,
-        amountISK: Math.round(settlementISK),
-        amountUSD: settlementUSD,
+        amountISK: Math.round(settlementVal * 100) / 100,
+        amountUSD: Math.round(settlementVal * 100) / 100,
       });
     }
 
-    debtor.amount -= settlementISK;
-    creditor.amount -= settlementISK;
+    debtor.amount -= settlementVal;
+    creditor.amount -= settlementVal;
 
-    if (debtor.amount < 1) i++;
-    if (creditor.amount < 1) j++;
+    if (debtor.amount < 0.01) i++;
+    if (creditor.amount < 0.01) j++;
   }
 
   return settlements;

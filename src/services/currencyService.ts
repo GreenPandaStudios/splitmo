@@ -37,10 +37,10 @@ export function convertCurrency(
   to: CurrencyCode,
   customRates?: Record<string, number>
 ): number {
-  if (from === to || !amount) return amount;
-  const rates = { ...DEFAULT_RATES, ...customRates };
-  const fromRate = rates[from] || 1;
-  const toRate = rates[to] || 1;
+  if (from === to || !amount || isNaN(amount)) return isNaN(amount) ? 0 : amount;
+  const rates = { ...DEFAULT_RATES, ...(customRates && typeof customRates === 'object' ? customRates : {}) };
+  const fromRate = rates[from] && !isNaN(rates[from]) ? rates[from] : DEFAULT_RATES[from] || 1;
+  const toRate = rates[to] && !isNaN(rates[to]) ? rates[to] : DEFAULT_RATES[to] || 1;
   const inUSD = amount / fromRate;
   const converted = inUSD * toRate;
   return to === 'ISK' || to === 'JPY' || to === 'HUF' ? Math.round(converted) : Math.round(converted * 100) / 100;
