@@ -12,12 +12,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onCreateTrip
   const [description, setDescription] = useState('');
   const [homeCurrency, setHomeCurrency] = useState<CurrencyCode>('USD');
   const [memberInput, setMemberInput] = useState('');
-  const [members, setMembers] = useState<string[]>(['Alice', 'Bob']);
+  const [members, setMembers] = useState<string[]>(['Alice', 'Bob', 'Charlie']);
 
   const handleAddMember = () => {
-    if (memberInput.trim() && !members.includes(memberInput.trim())) {
-      setMembers([...members, memberInput.trim()]);
-      setMemberInput('');
+    if (memberInput.trim()) {
+      const parsed = memberInput.split(',').map((s) => s.trim()).filter((s) => s && !members.includes(s));
+      if (parsed.length > 0) {
+        setMembers([...members, ...parsed]);
+        setMemberInput('');
+      }
     }
   };
 
@@ -92,9 +95,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onCreateTrip
           <div className="form-row">
             <input
               type="text"
-              placeholder="Add friend name"
+              placeholder="Names (e.g. 'Dana, Eric')"
               value={memberInput}
               onChange={(e) => setMemberInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddMember(); } }}
               className="text-input"
             />
             <button type="button" className="btn-secondary" onClick={handleAddMember}>

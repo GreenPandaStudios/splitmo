@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { DebtSettlement, CurrencyCode } from '../../types';
 import { formatCurrency, convertCurrency } from '../../services';
-import { ArrowRight, Check, Send } from 'lucide-react';
+import { ArrowRight, Check, Send, Share2, CheckCheck } from 'lucide-react';
 
 interface SettlementListProps {
   settlements: DebtSettlement[];
@@ -14,11 +14,29 @@ export const SettlementList: React.FC<SettlementListProps> = ({
   displayCurrency,
   onRecordSettlement,
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShareSummary = () => {
+    if (settlements.length === 0) return;
+    const summaryLines = settlements.map(
+      (s) => `• ${s.fromMemberName} pays ${s.toMemberName}: ${formatCurrency(convertCurrency(s.amountISK, 'ISK', displayCurrency), displayCurrency)}`
+    );
+    const text = `✈️ Splitmo Settlement Summary:\n${summaryLines.join('\n')}\n\nTracked via Splitmo App`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="section-block glass-card">
-      <div className="section-header-flex">
+      <div className="section-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 className="section-title">Suggested Debt Transfers</h2>
-        <span className="badge-pill aurora-border">Minimized</span>
+        {settlements.length > 0 && (
+          <button className="btn-secondary-small" onClick={handleShareSummary} title="Copy formatted share summary to clipboard">
+            {copied ? <CheckCheck size={13} className="icon-green" /> : <Share2 size={13} />}
+            <span>{copied ? 'Copied!' : 'Share Text'}</span>
+          </button>
+        )}
       </div>
 
       {settlements.length === 0 ? (

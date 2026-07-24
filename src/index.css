@@ -141,11 +141,16 @@ body {
 .creditor-name { color: var(--accent-green); }
 .settlement-val { font-family: var(--font-mono); font-weight: 700; font-size: 0.95rem; color: var(--accent-blue); }
 
+.btn-secondary-small { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); color: #fff; font-size: 0.78rem; padding: 4px 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
 .expense-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 8px; }
 .expense-title { font-family: var(--font-display); font-size: 0.92rem; font-weight: 600; }
 .expense-meta-row { display: flex; gap: 10px; font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
 .primary-amount { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; text-align: right; }
 .secondary-amount { font-size: 0.72rem; color: var(--text-sub); text-align: right; }
+
+.expense-splits-expanded-box { background: rgba(0, 0, 0, 0.3); border-top: 1px solid var(--border-subtle); padding: 8px 10px; border-radius: 6px; font-size: 0.78rem; margin-top: 6px; width: 100%; }
+.splits-grid-mini { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; margin-top: 4px; }
+.mini-split-row { display: flex; justify-content: space-between; font-family: var(--font-mono); color: var(--text-sub); }
 
 /* Modals & Onboarding */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; z-index: 100; padding: 0; }
