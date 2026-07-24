@@ -4,7 +4,7 @@ import { convertCurrency } from './currencyService';
 export function calculateMemberBalances(
   members: Member[],
   expenses: Expense[],
-  customIskRate?: number
+  customRates?: Record<string, number>
 ): MemberBalance[] {
   const balances: Record<string, { paidISK: number; paidUSD: number; shareISK: number; shareUSD: number }> = {};
 
@@ -13,8 +13,8 @@ export function calculateMemberBalances(
   });
 
   expenses.forEach((e) => {
-    const paidISK = e.amountInISK || convertCurrency(e.amount, e.currency, 'ISK', customIskRate);
-    const paidUSD = e.amountInUSD || convertCurrency(e.amount, e.currency, 'USD', customIskRate);
+    const paidISK = convertCurrency(e.amount, e.currency, 'ISK', customRates);
+    const paidUSD = convertCurrency(e.amount, e.currency, 'USD', customRates);
 
     if (balances[e.paidByMemberId]) {
       balances[e.paidByMemberId].paidISK += paidISK;
@@ -23,8 +23,8 @@ export function calculateMemberBalances(
 
     e.splits.forEach((s: SplitShare) => {
       if (balances[s.memberId]) {
-        const sISK = convertCurrency(s.amount, e.currency, 'ISK', customIskRate);
-        const sUSD = convertCurrency(s.amount, e.currency, 'USD', customIskRate);
+        const sISK = convertCurrency(s.amount, e.currency, 'ISK', customRates);
+        const sUSD = convertCurrency(s.amount, e.currency, 'USD', customRates);
         balances[s.memberId].shareISK += sISK;
         balances[s.memberId].shareUSD += sUSD;
       }
@@ -48,7 +48,7 @@ export function calculateMemberBalances(
 
 export function simplifyDebts(
   memberBalances: MemberBalance[],
-  customIskRate?: number
+  customRates?: Record<string, number>
 ): DebtSettlement[] {
   const debtors = memberBalances
     .filter((b) => b.netBalanceISK < -5)
@@ -70,7 +70,7 @@ export function simplifyDebts(
     const settlementISK = Math.min(debtor.amount, creditor.amount);
 
     if (settlementISK > 1) {
-      const settlementUSD = convertCurrency(settlementISK, 'ISK', 'USD', customIskRate);
+      const settlementUSD = convertCurrency(settlementISK, 'ISK', 'USD', customRates);
       settlements.push({
         fromMemberId: debtor.id,
         fromMemberName: debtor.name,

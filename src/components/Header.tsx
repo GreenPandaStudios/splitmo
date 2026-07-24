@@ -1,12 +1,12 @@
 import React from 'react';
 import type { CurrencyCode } from '../types';
-import { Compass, RefreshCw, Database, DollarSign, Layers } from 'lucide-react';
+import { CURRENCY_LIST } from '../services';
+import { Compass, RefreshCw, Database, Layers } from 'lucide-react';
 
 interface HeaderProps {
   tripName: string;
   displayCurrency: CurrencyCode;
-  onToggleCurrency: () => void;
-  iskRate: number;
+  onSelectCurrency: (code: CurrencyCode) => void;
   onRefreshRate: () => void;
   isDbActive: boolean;
   dbTypeName?: string;
@@ -16,8 +16,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   tripName,
   displayCurrency,
-  onToggleCurrency,
-  iskRate,
+  onSelectCurrency,
   onRefreshRate,
   isDbActive,
   dbTypeName = 'Local DB',
@@ -26,37 +25,44 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="app-header glass-card">
       <div className="header-brand">
-        <div className="brand-icon-wrapper" onClick={onOpenTripManager} style={{ cursor: 'pointer' }} title="Manage Trips">
-          <Compass className="brand-icon spinning-compass" size={26} />
+        <div className="brand-icon-wrapper" onClick={onOpenTripManager} title="Manage Trips">
+          <Compass className="brand-icon spinning-compass" size={24} />
         </div>
         <div>
-          <h1 className="brand-title">Splitmo 🇮🇸</h1>
+          <h1 className="brand-title">Splitmo</h1>
           <p className="brand-subtitle">{tripName}</p>
         </div>
       </div>
 
       <div className="header-actions">
-        <button className="btn-secondary" onClick={onOpenTripManager} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button className="btn-secondary" onClick={onOpenTripManager}>
           <Layers size={14} />
           <span>Trips</span>
         </button>
 
-        <div className="status-badge live-rate-badge" title="Current ISK to 1 USD exchange rate">
-          <span>1 USD = {Math.round(iskRate)} ISK</span>
-          <button className="icon-btn-small" onClick={onRefreshRate} title="Refresh Exchange Rate">
-            <RefreshCw size={12} />
+        <div className="status-badge live-rate-badge">
+          <span>Rates Live</span>
+          <button className="icon-btn-small" onClick={onRefreshRate} title="Refresh Rates">
+            <RefreshCw size={11} />
           </button>
         </div>
 
         <div className={`status-badge fb-badge ${isDbActive ? 'connected' : 'local'}`}>
-          <Database size={13} />
+          <Database size={12} />
           <span>{dbTypeName}</span>
         </div>
 
-        <button className="currency-toggle-btn" onClick={onToggleCurrency}>
-          <DollarSign size={16} />
-          <span>View in {displayCurrency === 'USD' ? 'ISK (kr.)' : 'USD ($)'}</span>
-        </button>
+        <select
+          value={displayCurrency}
+          onChange={(e) => onSelectCurrency(e.target.value as CurrencyCode)}
+          className="select-input curr-select-header"
+        >
+          {CURRENCY_LIST.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.flag} {c.code} ({c.symbol})
+            </option>
+          ))}
+        </select>
       </div>
     </header>
   );

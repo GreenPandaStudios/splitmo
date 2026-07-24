@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import type { Expense, Member, CurrencyCode, ExpenseCategory, SplitType, SplitShare } from '../../types';
+import { CURRENCY_LIST, convertCurrency } from '../../services';
 import { SplitSelector } from './SplitSelector';
 import { CategoryPayerSelector } from './CategoryPayerSelector';
-import { convertCurrency } from '../../services';
 import { Plus, X } from 'lucide-react';
 
 interface AddExpenseModalProps {
@@ -10,22 +10,20 @@ interface AddExpenseModalProps {
   onClose: () => void;
   onSaveExpense: (expense: Expense) => void;
   members: Member[];
-  iskRate: number;
+  customRates?: Record<string, number>;
   initialData?: Partial<Expense>;
 }
 
 export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
-  isOpen, onClose, onSaveExpense, members, iskRate, initialData,
+  isOpen, onClose, onSaveExpense, members, customRates, initialData,
 }) => {
   const [title, setTitle] = useState(initialData?.title || '');
   const [amount, setAmount] = useState<string>(initialData?.amount?.toString() || '');
-  const [currency, setCurrency] = useState<CurrencyCode>(initialData?.currency || 'ISK');
+  const [currency, setCurrency] = useState<CurrencyCode>(initialData?.currency || 'USD');
   const [paidBy, setPaidBy] = useState<string>(initialData?.paidByMemberId || members[0]?.id || '');
   const [category, setCategory] = useState<ExpenseCategory>(initialData?.category || 'food');
   const [splitType, setSplitType] = useState<SplitType>(initialData?.splitType || 'equal');
-  const [splits, setSplits] = useState<SplitShare[]>(
-    initialData?.splits || members.map((m) => ({ memberId: m.id, amount: 0 }))
-  );
+  const [splits, setSplits] = useState<SplitShare[]>(initialData?.splits || members.map((m) => ({ memberId: m.id, amount: 0 })));
 
   if (!isOpen) return null;
 
@@ -41,9 +39,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     const newExpense: Expense = {
       id: initialData?.id || `exp_${Date.now()}`,
       title, amount: numAmount, currency,
-      amountInISK: convertCurrency(numAmount, currency, 'ISK', iskRate),
-      amountInUSD: convertCurrency(numAmount, currency, 'USD', iskRate),
-      exchangeRateUsed: iskRate, paidByMemberId: paidBy,
+      amountInISK: convertCurrency(numAmount, currency, 'ISK', customRates),
+      amountInUSD: convertCurrency(numAmount, currency, 'USD', customRates),
+      exchangeRateUsed: customRates?.[currency] || 1, paidByMemberId: paidBy,
       date: initialData?.date || new Date().toISOString().split('T')[0],
       category, splitType, splits: finalSplits,
       createdAt: new Date().toISOString(),
@@ -57,14 +55,14 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     <div className="modal-backdrop">
       <div className="modal-content glass-card slide-up">
         <div className="modal-header">
-          <h2>{initialData?.id ? 'Edit Expense' : 'Add New Trip Expense 🌋'}</h2>
+          <h2>{initialData?.id ? 'Edit Expense' : 'Add New Expense 💳'}</h2>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label className="input-label">Description / Merchant</label>
-            <input type="text" required placeholder="e.g. Bónus Supermarket, Gas, Icewear" value={title} onChange={(e) => setTitle(e.target.value)} className="text-input" />
+            <label className="input-label">Description / Vendor</label>
+            <input type="text" required placeholder="e.g. Hotel, Fuel, Dinner" value={title} onChange={(e) => setTitle(e.target.value)} className="text-input" />
           </div>
 
           <div className="form-row">
@@ -76,9 +74,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             <div className="form-group flex-1">
               <label className="input-label">Currency</label>
               <select value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)} className="select-input">
-                <option value="ISK">ISK (kr.)</option>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
+                {CURRENCY_LIST.map((c) => (
+                  <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                ))}
               </select>
             </div>
           </div>

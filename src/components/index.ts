@@ -11,3 +11,4 @@ export * from './Modals/ReceiptOcrModal';
 export * from './Modals/SplitwiseImportModal';
 export * from './Modals/SettingsModal';
 export * from './Modals/TripManagerModal';
+export * from './OnboardingScreen';

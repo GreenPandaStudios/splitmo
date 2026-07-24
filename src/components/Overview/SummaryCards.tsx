@@ -8,7 +8,7 @@ interface SummaryCardsProps {
   memberCount: number;
   settlementCount: number;
   displayCurrency: CurrencyCode;
-  iskRate: number;
+  customRates?: Record<string, number>;
 }
 
 export const SummaryCards: React.FC<SummaryCardsProps> = ({
@@ -16,69 +16,60 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
   memberCount,
   settlementCount,
   displayCurrency,
-  iskRate,
+  customRates,
 }) => {
-  const totalISK = expenses.reduce(
-    (sum, e) => sum + (e.amountInISK || convertCurrency(e.amount, e.currency, 'ISK', iskRate)),
-    0
-  );
-  const totalUSD = expenses.reduce(
-    (sum, e) => sum + (e.amountInUSD || convertCurrency(e.amount, e.currency, 'USD', iskRate)),
+  const totalConverted = expenses.reduce(
+    (sum, e) => sum + convertCurrency(e.amount, e.currency, displayCurrency, customRates),
     0
   );
 
-  const perPersonISK = memberCount > 0 ? totalISK / memberCount : 0;
-  const perPersonUSD = memberCount > 0 ? totalUSD / memberCount : 0;
-
-  const displayTotal = displayCurrency === 'USD' ? formatCurrency(totalUSD, 'USD') : formatCurrency(totalISK, 'ISK');
-  const secondaryTotal = displayCurrency === 'USD' ? formatCurrency(totalISK, 'ISK') : formatCurrency(totalUSD, 'USD');
-
-  const displayPerPerson = displayCurrency === 'USD' ? formatCurrency(perPersonUSD, 'USD') : formatCurrency(perPersonISK, 'ISK');
-  const secondaryPerPerson = displayCurrency === 'USD' ? formatCurrency(perPersonISK, 'ISK') : formatCurrency(perPersonUSD, 'USD');
+  const perPersonConverted = memberCount > 0 ? totalConverted / memberCount : 0;
+  const displayTotal = formatCurrency(totalConverted, displayCurrency);
+  const displayPerPerson = formatCurrency(perPersonConverted, displayCurrency);
 
   return (
     <div className="summary-cards-grid">
       <div className="stat-card glass-card">
         <div className="stat-icon aurora-glow">
-          <Wallet size={24} />
+          <Wallet size={22} />
         </div>
         <div className="stat-content">
-          <span className="stat-label">Total Trip Expense</span>
+          <span className="stat-label">Total Spent</span>
           <div className="stat-value">{displayTotal}</div>
-          <span className="stat-subtext">≈ {secondaryTotal}</span>
+          <span className="stat-subtext">Sum across all trip expenses</span>
         </div>
       </div>
 
       <div className="stat-card glass-card">
         <div className="stat-icon blue-glow">
-          <Users size={24} />
+          <Users size={22} />
         </div>
         <div className="stat-content">
-          <span className="stat-label">Average per Person ({memberCount})</span>
+          <span className="stat-label">Per Person ({memberCount})</span>
           <div className="stat-value">{displayPerPerson}</div>
-          <span className="stat-subtext">≈ {secondaryPerPerson}</span>
+          <span className="stat-subtext">Equal split target</span>
         </div>
       </div>
 
       <div className="stat-card glass-card">
         <div className="stat-icon purple-glow">
-          <ArrowRightLeft size={24} />
+          <ArrowRightLeft size={22} />
         </div>
         <div className="stat-content">
-          <span className="stat-label">Settlement Transfers</span>
-          <div className="stat-value">{settlementCount} transfers</div>
-          <span className="stat-subtext">Minimized graph solver</span>
+          <span className="stat-label">Transfers</span>
+          <div className="stat-value">{settlementCount} needed</div>
+          <span className="stat-subtext">Minimized debt graph</span>
         </div>
       </div>
 
       <div className="stat-card glass-card">
         <div className="stat-icon teal-glow">
-          <CreditCard size={24} />
+          <CreditCard size={22} />
         </div>
         <div className="stat-content">
-          <span className="stat-label">Expenses Recorded</span>
+          <span className="stat-label">Expenses</span>
           <div className="stat-value">{expenses.length} items</div>
-          <span className="stat-subtext">Multi-currency (ISK/USD)</span>
+          <span className="stat-subtext">Multi-currency ledger</span>
         </div>
       </div>
     </div>

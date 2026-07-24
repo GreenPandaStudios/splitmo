@@ -8,16 +8,17 @@ interface SplitwiseImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   existingMembers: Member[];
+  customRates?: Record<string, number>;
+  iskRate?: number;
   onImportComplete: (result: SplitwiseImportResult) => void;
-  iskRate: number;
 }
 
 export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
   isOpen,
   onClose,
   existingMembers,
+  customRates,
   onImportComplete,
-  iskRate,
 }) => {
   const [fileName, setFileName] = useState('');
   const [parseResult, setParseResult] = useState<SplitwiseImportResult | null>(null);
@@ -32,7 +33,7 @@ export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
       reader.onload = (event) => {
         const text = event.target?.result as string;
         if (text) {
-          const res = parseSplitwiseCSV(text, existingMembers, iskRate);
+          const res = parseSplitwiseCSV(text, existingMembers, customRates);
           setParseResult(res);
         }
       };
@@ -51,64 +52,31 @@ export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
     <div className="modal-backdrop">
       <div className="modal-content glass-card slide-up large-modal">
         <div className="modal-header">
-          <h2>Import Splitwise CSV Export 📊</h2>
-          <button className="close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
+          <h2>Import Splitwise CSV 📊</h2>
+          <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
         <div className="import-modal-body">
           <p className="modal-subtext">
-            Export your group expenses from Splitwise as a CSV file, then drop it here to import all expenses and members instantly!
+            Export expenses from Splitwise as a CSV file and upload it here to import all members and expenses automatically.
           </p>
 
           <label className="csv-dropzone">
-            <Upload size={32} className="icon-blue" />
-            <span>{fileName ? `Loaded: ${fileName}` : 'Choose Splitwise CSV Export File'}</span>
+            <Upload size={28} className="icon-blue" />
+            <span>{fileName ? `Loaded: ${fileName}` : 'Upload Splitwise CSV Export'}</span>
             <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input-hidden" />
           </label>
 
           {parseResult && (
             <div className="import-preview-box">
               <div className="preview-header">
-                <CheckCircle2 size={20} className="icon-green" />
+                <CheckCircle2 size={18} className="icon-green" />
                 <span>Found {parseResult.expenses.length} expenses to import</span>
               </div>
 
               <div className="import-stats">
                 <div className="stat-pill">Members: {parseResult.members.length}</div>
                 <div className="stat-pill">Expenses: {parseResult.expenses.length}</div>
-                {parseResult.ignoredCount > 0 && (
-                  <div className="stat-pill warning">Skipped {parseResult.ignoredCount} invalid rows</div>
-                )}
-              </div>
-
-              <div className="preview-table-container">
-                <table className="preview-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Description</th>
-                      <th>Amount</th>
-                      <th>Category</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parseResult.expenses.slice(0, 5).map((exp) => (
-                      <tr key={exp.id}>
-                        <td>{exp.date}</td>
-                        <td>{exp.title}</td>
-                        <td>
-                          {exp.amount} {exp.currency}
-                        </td>
-                        <td>{exp.category}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {parseResult.expenses.length > 5 && (
-                  <p className="more-rows-lbl">+ {parseResult.expenses.length - 5} more expenses...</p>
-                )}
               </div>
 
               <button className="btn-primary full-width" onClick={handleConfirmImport}>

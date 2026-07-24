@@ -7,7 +7,7 @@ interface ExpenseCardProps {
   expense: Expense;
   members: Member[];
   displayCurrency: CurrencyCode;
-  iskRate: number;
+  customRates?: Record<string, number>;
   onDeleteExpense: (id: string) => void;
 }
 
@@ -15,16 +15,14 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   expense,
   members,
   displayCurrency,
-  iskRate,
+  customRates,
   onDeleteExpense,
 }) => {
-  const payer = members.find((m) => m.id === expense.paidByMemberId)?.name || 'Unknown Member';
+  const payer = members.find((m) => m.id === expense.paidByMemberId)?.name || 'Member';
 
-  const amountISK = expense.amountInISK || convertCurrency(expense.amount, expense.currency, 'ISK', iskRate);
-  const amountUSD = expense.amountInUSD || convertCurrency(expense.amount, expense.currency, 'USD', iskRate);
-
-  const primaryAmountStr = displayCurrency === 'USD' ? formatCurrency(amountUSD, 'USD') : formatCurrency(amountISK, 'ISK');
-  const secondaryAmountStr = displayCurrency === 'USD' ? formatCurrency(amountISK, 'ISK') : formatCurrency(amountUSD, 'USD');
+  const convertedAmount = convertCurrency(expense.amount, expense.currency, displayCurrency, customRates);
+  const primaryAmountStr = formatCurrency(convertedAmount, displayCurrency);
+  const originalAmountStr = formatCurrency(expense.amount, expense.currency);
 
   const CategoryIcon = getCategoryIcon(expense.category);
 
@@ -32,17 +30,13 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
     <div className="expense-card glass-card">
       <div className="expense-card-left">
         <div className="category-badge-icon">
-          <CategoryIcon size={20} />
+          <CategoryIcon size={18} />
         </div>
         <div className="expense-main-info">
           <h3 className="expense-title">{expense.title}</h3>
           <div className="expense-meta-row">
-            <span className="meta-item">
-              <Calendar size={13} /> {expense.date}
-            </span>
-            <span className="meta-item">
-              <User size={13} /> Paid by <strong>{payer}</strong>
-            </span>
+            <span className="meta-item"><Calendar size={12} /> {expense.date}</span>
+            <span className="meta-item"><User size={12} /> {payer}</span>
             <span className="category-chip">{expense.category}</span>
           </div>
         </div>
@@ -51,18 +45,13 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
       <div className="expense-card-right">
         <div className="expense-amount-display">
           <span className="primary-amount">{primaryAmountStr}</span>
-          <span className="secondary-amount">≈ {secondaryAmountStr}</span>
           {expense.currency !== displayCurrency && (
-            <span className="original-curr-tag">Recorded in {expense.currency}</span>
+            <span className="secondary-amount">Orig: {originalAmountStr}</span>
           )}
         </div>
 
-        <button
-          className="delete-btn-icon"
-          onClick={() => onDeleteExpense(expense.id)}
-          title="Delete expense"
-        >
-          <Trash2 size={16} />
+        <button className="delete-btn-icon" onClick={() => onDeleteExpense(expense.id)} title="Delete expense">
+          <Trash2 size={15} />
         </button>
       </div>
     </div>

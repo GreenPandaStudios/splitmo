@@ -7,7 +7,7 @@ interface ExpenseListProps {
   expenses: Expense[];
   members: Member[];
   displayCurrency: CurrencyCode;
-  iskRate: number;
+  customRates?: Record<string, number>;
   onDeleteExpense: (id: string) => void;
 }
 
@@ -15,15 +15,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   expenses,
   members,
   displayCurrency,
-  iskRate,
+  customRates,
   onDeleteExpense,
 }) => {
   if (expenses.length === 0) {
     return (
       <div className="empty-state-box glass-card">
-        <Inbox size={40} className="icon-muted" />
-        <p className="empty-title">No expenses found</p>
-        <p className="empty-subtext">Add a new expense or import from Splitwise to get started.</p>
+        <Inbox size={36} className="icon-muted" />
+        <p className="empty-title">No expenses recorded yet</p>
+        <p className="empty-subtext">Tap '+' or scan a receipt to log your first expense.</p>
       </div>
     );
   }
@@ -36,7 +36,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           expense={expense}
           members={members}
           displayCurrency={displayCurrency}
-          iskRate={iskRate}
+          customRates={customRates}
           onDeleteExpense={onDeleteExpense}
         />
       ))}

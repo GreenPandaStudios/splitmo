@@ -1,50 +1,67 @@
-import type { CurrencyCode } from '../types';
+import type { CurrencyCode, CurrencyMeta } from '../types';
 
-export const DEFAULT_ISK_PER_USD = 138.5; // ~138.5 ISK per 1 USD
+export const CURRENCY_LIST: CurrencyMeta[] = [
+  { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
+  { code: 'ISK', symbol: 'kr.', name: 'Icelandic Króna', flag: '🇮🇸' },
+  { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺' },
+  { code: 'GBP', symbol: '£', name: 'British Pound', flag: '🇬🇧' },
+  { code: 'CAD', symbol: '$', name: 'Canadian Dollar', flag: '🇨🇦' },
+  { code: 'AUD', symbol: '$', name: 'Australian Dollar', flag: '🇦🇺' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: '🇯🇵' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc', flag: '🇨🇭' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone', flag: '🇳🇴' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona', flag: '🇸🇪' },
+  { code: 'DKK', symbol: 'kr', name: 'Danish Krone', flag: '🇩🇰' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: '🇮🇳' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', flag: '🇧🇷' },
+  { code: 'MXN', symbol: '$', name: 'Mexican Peso', flag: '🇲🇽' },
+  { code: 'SGD', symbol: '$', name: 'Singapore Dollar', flag: '🇸🇬' },
+  { code: 'NZD', symbol: '$', name: 'New Zealand Dollar', flag: '🇳🇿' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand', flag: '🇿🇦' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht', flag: '🇹🇭' },
+  { code: 'PLN', symbol: 'zł', name: 'Polish Złoty', flag: '🇵🇱' },
+  { code: 'HKD', symbol: '$', name: 'Hong Kong Dollar', flag: '🇭🇰' },
+  { code: 'CZK', symbol: 'Kč', name: 'Czech Koruna', flag: '🇨🇿' },
+  { code: 'HUF', symbol: 'Ft', name: 'Hungarian Forint', flag: '🇭🇺' },
+];
+
+export const DEFAULT_RATES: Record<string, number> = {
+  USD: 1, ISK: 138.5, EUR: 0.92, GBP: 0.78, CAD: 1.36, AUD: 1.52, JPY: 155.2,
+  CHF: 0.91, NOK: 10.6, SEK: 10.5, DKK: 6.85, INR: 83.4, BRL: 5.42, MXN: 18.2,
+  SGD: 1.35, NZD: 1.64, ZAR: 18.1, THB: 36.7, PLN: 3.96, HKD: 7.81, CZK: 23.1, HUF: 362.5,
+};
 
 export function convertCurrency(
   amount: number,
   from: CurrencyCode,
   to: CurrencyCode,
-  customIskRate?: number
+  customRates?: Record<string, number>
 ): number {
-  if (from === to) return amount;
-  const rate = customIskRate && customIskRate > 0 ? customIskRate : DEFAULT_ISK_PER_USD;
-
-  if (from === 'ISK' && to === 'USD') {
-    return Math.round((amount / rate) * 100) / 100;
-  }
-  if (from === 'USD' && to === 'ISK') {
-    return Math.round(amount * rate);
-  }
-  if (from === 'EUR' && to === 'USD') {
-    return Math.round(amount * 1.08 * 100) / 100;
-  }
-  if (from === 'EUR' && to === 'ISK') {
-    return Math.round(amount * 1.08 * rate);
-  }
-  return amount;
+  if (from === to || !amount) return amount;
+  const rates = { ...DEFAULT_RATES, ...customRates };
+  const fromRate = rates[from] || 1;
+  const toRate = rates[to] || 1;
+  const inUSD = amount / fromRate;
+  const converted = inUSD * toRate;
+  return to === 'ISK' || to === 'JPY' || to === 'HUF' ? Math.round(converted) : Math.round(converted * 100) / 100;
 }
 
 export function formatCurrency(amount: number, currency: CurrencyCode): string {
-  if (currency === 'ISK') {
-    return `${Math.round(amount).toLocaleString('is-IS')} kr.`;
+  const meta = CURRENCY_LIST.find((c) => c.code === currency);
+  const symbol = meta?.symbol || '$';
+  if (currency === 'ISK' || currency === 'JPY' || currency === 'HUF') {
+    return `${Math.round(amount).toLocaleString()} ${symbol}`;
   }
-  if (currency === 'USD') {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-  return `€${amount.toFixed(2)}`;
+  return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export async function fetchLiveIskRate(): Promise<number> {
+export async function fetchLiveRates(): Promise<Record<string, number>> {
   try {
-    const response = await fetch('https://open.er-api.com/v6/latest/USD');
-    const data = await response.json();
-    if (data?.rates?.ISK) {
-      return data.rates.ISK;
-    }
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if (data?.rates) return data.rates;
   } catch (err) {
-    console.warn('Could not fetch live exchange rate, using default ISK rate:', err);
+    console.warn('Live rates fetch failed, using defaults:', err);
   }
-  return DEFAULT_ISK_PER_USD;
+  return DEFAULT_RATES;
 }

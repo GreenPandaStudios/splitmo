@@ -10,7 +10,7 @@ export interface SplitwiseImportResult {
 export function parseSplitwiseCSV(
   csvContent: string,
   existingMembers: Member[],
-  customIskRate?: number
+  customRates?: Record<string, number>
 ): SplitwiseImportResult {
   const lines = csvContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return { members: [], expenses: [], ignoredCount: 0 };
@@ -30,7 +30,7 @@ export function parseSplitwiseCSV(
     const categoryRaw = row[2] || 'other';
     const costRaw = parseFloat(row[3] || row[4] || '0');
     const currencyRaw = (row[4] && isNaN(Number(row[4])) ? row[4] : 'USD').toUpperCase();
-    const currency: CurrencyCode = currencyRaw.includes('ISK') ? 'ISK' : currencyRaw.includes('EUR') ? 'EUR' : 'USD';
+    const currency: CurrencyCode = (currencyRaw as CurrencyCode) || 'USD';
 
     if (isNaN(costRaw) || costRaw <= 0) {
       ignoredCount++;
@@ -52,9 +52,9 @@ export function parseSplitwiseCSV(
       title: description,
       amount: costRaw,
       currency,
-      amountInISK: convertCurrency(costRaw, currency, 'ISK', customIskRate),
-      amountInUSD: convertCurrency(costRaw, currency, 'USD', customIskRate),
-      exchangeRateUsed: customIskRate || 138.5,
+      amountInISK: convertCurrency(costRaw, currency, 'ISK', customRates),
+      amountInUSD: convertCurrency(costRaw, currency, 'USD', customRates),
+      exchangeRateUsed: customRates?.[currency] || 1,
       paidByMemberId: payer.id,
       date,
       category: mapCategory(categoryRaw),
