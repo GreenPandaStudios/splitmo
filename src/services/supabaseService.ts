@@ -6,68 +6,35 @@ export interface SupabaseConfig {
   anonKey: string;
 }
 
-let cachedClient: SupabaseClient | null = null;
-let cachedUrl = '';
-let cachedKey = '';
+export const DEFAULT_SUPABASE_CONFIG: SupabaseConfig = {
+  url: 'https://zhugeagqnhwypklwsxzz.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpodWdlYWdxbmh3eXBrbHdzeHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MjYzNzUsImV4cCI6MjEwMDUwMjM3NX0.-tMZPSyamR9GpWlFxNgsgRCNvpty5wAoKdhGu_OpAe8',
+};
 
-export function getSupabaseClient(config: SupabaseConfig): SupabaseClient | null {
-  if (!config.url || !config.anonKey) return null;
-  if (cachedClient && cachedUrl === config.url && cachedKey === config.anonKey) {
-    return cachedClient;
+const clientCache = new Map<string, SupabaseClient>();
+
+export function getSupabaseClient(config?: SupabaseConfig): SupabaseClient | null {
+  const cfg = config?.url && config?.anonKey ? config : DEFAULT_SUPABASE_CONFIG;
+  if (!cfg.url || !cfg.anonKey) return null;
+  const key = `${cfg.url}:${cfg.anonKey}`;
+  if (!clientCache.has(key)) {
+    clientCache.set(key, createClient(cfg.url, cfg.anonKey));
   }
-  try {
-    cachedClient = createClient(config.url, config.anonKey);
-    cachedUrl = config.url;
-    cachedKey = config.anonKey;
-    return cachedClient;
-  } catch (err) {
-    console.error('Failed to initialize Supabase client:', err);
-    return null;
-  }
+  return clientCache.get(key) || null;
 }
 
-export function subscribeToTripSupabase(
-  config: SupabaseConfig,
-  tripId: string,
-  onUpdate: (trip: TripGroup) => void
-): (() => void) | null {
-  const client = getSupabaseClient(config);
-  if (!client) return null;
-
-  try {
-    const channel = client
-      .channel(`trip_${tripId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` },
-        (payload: any) => {
-          if (payload.new && payload.new.data) {
-            onUpdate(payload.new.data as TripGroup);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      client.removeChannel(channel);
-    };
-  } catch (err) {
-    console.error('Supabase subscription error:', err);
-    return null;
-  }
-}
-
-export async function syncTripToSupabase(config: SupabaseConfig, trip: TripGroup): Promise<boolean> {
+export async function syncTripToSupabase(config: SupabaseConfig | undefined, trip: TripGroup): Promise<boolean> {
   const client = getSupabaseClient(config);
   if (!client) return false;
-
   try {
-    const { error } = await client
-      .from('trips')
-      .upsert({ id: trip.id, name: trip.name, data: trip, updated_at: new Date().toISOString() });
-
+    const { error } = await client.from('trips').upsert({
+      id: trip.id,
+      name: trip.name,
+      data: trip,
+      updated_at: new Date().toISOString(),
+    });
     if (error) {
-      console.error('Supabase upsert error:', error);
+      console.warn('Supabase upsert error:', error.message);
       return false;
     }
     return true;
@@ -75,4 +42,30 @@ export async function syncTripToSupabase(config: SupabaseConfig, trip: TripGroup
     console.error('Failed to sync trip to Supabase:', err);
     return false;
   }
+}
+
+export function subscribeToTripSupabase(
+  config: SupabaseConfig | undefined,
+  tripId: string,
+  onRemoteUpdate: (trip: TripGroup) => void
+): (() => void) | null {
+  const client = getSupabaseClient(config);
+  if (!client) return null;
+
+  const channel = client
+    .channel(`trip_${tripId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` },
+      (payload) => {
+        if (payload.new?.data) {
+          onRemoteUpdate(payload.new.data as TripGroup);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    client.removeChannel(channel);
+  };
 }

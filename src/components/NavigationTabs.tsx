@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Receipt, PlusCircle, ScanLine, FileSpreadsheet, Settings } from 'lucide-react';
+import { LayoutDashboard, Receipt, PlusCircle, Scan, FileSpreadsheet, Settings } from 'lucide-react';
 
 export type TabType = 'overview' | 'expenses' | 'add' | 'ocr' | 'import' | 'settings';
 
@@ -14,28 +14,31 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
   onSelectTab,
   expenseCount,
 }) => {
-  const tabs = [
-    { id: 'overview' as TabType, label: 'Overview', icon: LayoutDashboard },
-    { id: 'expenses' as TabType, label: `Expenses (${expenseCount})`, icon: Receipt },
-    { id: 'add' as TabType, label: 'Add Expense', icon: PlusCircle, highlight: true },
-    { id: 'ocr' as TabType, label: 'Receipt OCR', icon: ScanLine },
-    { id: 'import' as TabType, label: 'Import Splitwise', icon: FileSpreadsheet },
-    { id: 'settings' as TabType, label: 'Settings', icon: Settings },
+  const tabs: { id: TabType; label: string; icon: React.ElementType; badge?: number; highlight?: boolean }[] = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'expenses', label: 'Expenses', icon: Receipt, badge: expenseCount },
+    { id: 'add', label: 'Add', icon: PlusCircle, highlight: true },
+    { id: 'ocr', label: 'OCR Scan', icon: Scan },
+    { id: 'import', label: 'Import CSV', icon: FileSpreadsheet },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
-    <nav className="nav-tabs-container">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const isActive = activeTab === tab.id;
+    <nav className="nav-tabs-container glass-card">
+      {tabs.map((t) => {
+        const Icon = t.icon;
+        const isActive = activeTab === t.id;
         return (
           <button
-            key={tab.id}
-            className={`nav-tab-btn ${isActive ? 'active' : ''} ${tab.highlight ? 'highlight-btn' : ''}`}
-            onClick={() => onSelectTab(tab.id)}
+            key={t.id}
+            className={`nav-tab-btn ${isActive ? 'active' : ''} ${t.highlight ? 'highlight-btn' : ''}`}
+            onClick={() => onSelectTab(t.id)}
           >
-            <Icon size={18} />
-            <span>{tab.label}</span>
+            <Icon size={16} />
+            <span>{t.label}</span>
+            {t.badge !== undefined && t.badge > 0 && (
+              <span className="tab-badge">{t.badge}</span>
+            )}
           </button>
         );
       })}

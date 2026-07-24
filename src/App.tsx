@@ -3,7 +3,7 @@ import type { TripGroup, CurrencyCode, Expense, DebtSettlement } from './types';
 import {
   loadAllTrips, saveAllTrips, loadActiveTripId, saveActiveTripId,
   fetchLiveRates, calculateMemberBalances, simplifyDebts,
-  subscribeToTripSupabase, syncTripToSupabase,
+  subscribeToTripSupabase, syncTripToSupabase, DEFAULT_SUPABASE_CONFIG,
 } from './services';
 import type { TabType } from './components';
 import {
@@ -26,22 +26,23 @@ export default function App() {
   const [ocrInitialData, setOcrInitialData] = useState<Partial<Expense> | undefined>(undefined);
 
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId) || trips[0] || null, [trips, activeTripId]);
-  const isSbActive = Boolean(activeTrip?.supabaseConfig?.url && activeTrip?.supabaseConfig?.anonKey);
+  const isSbActive = Boolean(activeTrip?.supabaseConfig?.url || DEFAULT_SUPABASE_CONFIG.url);
 
   useEffect(() => {
     saveAllTrips(trips);
     if (activeTripId) saveActiveTripId(activeTripId);
-    if (activeTrip?.supabaseConfig?.url) syncTripToSupabase(activeTrip.supabaseConfig, activeTrip);
+    if (activeTrip) syncTripToSupabase(activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG, activeTrip);
   }, [trips, activeTripId, activeTrip]);
 
   useEffect(() => {
-    if (activeTrip?.supabaseConfig?.url) {
-      const unsub = subscribeToTripSupabase(activeTrip.supabaseConfig, activeTrip.id, (remote: TripGroup) => {
+    if (activeTrip) {
+      const cfg = activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG;
+      const unsub = subscribeToTripSupabase(cfg, activeTrip.id, (remote: TripGroup) => {
         setTrips((prev) => prev.map((t) => (t.id === remote.id ? remote : t)));
       });
       return () => { if (unsub) unsub(); };
     }
-  }, [activeTrip?.supabaseConfig, activeTrip?.id]);
+  }, [activeTrip?.id, activeTrip?.supabaseConfig]);
 
   const updateCurrentTrip = (updater: (t: TripGroup) => TripGroup) => {
     if (!activeTrip) return;
@@ -52,6 +53,7 @@ export default function App() {
     const newTrip: TripGroup = {
       id: `trip_${Date.now()}`,
       name, description,
+      supabaseConfig: DEFAULT_SUPABASE_CONFIG,
       exchangeRates: { baseCurrency: homeCurrency, rates: {}, lastUpdated: new Date().toISOString() },
       members: initialMembers.map((mName, idx) => ({ id: `m_${Date.now()}_${idx}`, name: mName })),
       expenses: [],
@@ -87,7 +89,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header tripName={activeTrip.name} displayCurrency={displayCurrency} onSelectCurrency={setDisplayCurrency} onRefreshRate={async () => { const r = await fetchLiveRates(); updateCurrentTrip((t) => ({ ...t, exchangeRates: { ...t.exchangeRates, rates: r } })); }} isDbActive={isSbActive} dbTypeName={isSbActive ? 'Supabase Live ⚡' : 'Local DB'} onOpenTripManager={() => setIsTripManagerOpen(true)} />
+      <Header tripName={activeTrip.name} displayCurrency={displayCurrency} onSelectCurrency={setDisplayCurrency} onRefreshRate={async () => { const r = await fetchLiveRates(); updateCurrentTrip((t) => ({ ...t, exchangeRates: { ...t.exchangeRates, rates: r } })); }} isDbActive={isSbActive} dbTypeName="Supabase Live ⚡" onOpenTripManager={() => setIsTripManagerOpen(true)} />
       <NavigationTabs activeTab={activeTab} onSelectTab={(tab) => { if (tab === 'add') setOcrInitialData(undefined); setActiveTab(tab); }} expenseCount={activeTrip.expenses.length} />
 
       <main className="app-main-content">
