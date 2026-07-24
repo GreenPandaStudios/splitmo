@@ -1,28 +1,27 @@
 import type { Member } from './member';
 import type { Expense } from './expense';
 import type { ExchangeRates } from './currency';
+import type { SupabaseConfig } from '../services/supabaseService';
 
 export interface TripGroup {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  customIskToUsdRate?: number;
+  currentMemberId?: string;
+  supabaseConfig?: SupabaseConfig;
+  exchangeRates: ExchangeRates;
   members: Member[];
   expenses: Expense[];
-  exchangeRates: ExchangeRates;
-  customIskToUsdRate?: number;
-  supabaseConfig?: {
-    url: string;
-    anonKey: string;
-  };
-  createdAt?: string;
+  createdAt: string;
 }
 
 export interface TripSummary {
   id: string;
   name: string;
+  description?: string;
   expenseCount: number;
-  totalISK: number;
-  totalUSD: number;
+  memberCount: number;
 }
 
 export interface DebtSettlement {

@@ -1,23 +1,29 @@
-import type { Member, Expense, CurrencyCode, ExpenseCategory } from '../types';
+import type { Member, Expense, CurrencyCode, ExpenseCategory, TripGroup } from '../types';
 import { convertCurrency } from './currencyService';
+import { DEFAULT_SUPABASE_CONFIG } from './supabaseService';
 
 export interface SplitwiseImportResult {
-  members: Member[];
-  expenses: Expense[];
+  trip: TripGroup;
   ignoredCount: number;
 }
 
-export function parseSplitwiseCSV(
+export function parseSplitwiseCSVToTrip(
   csvContent: string,
-  existingMembers: Member[],
+  tripNameHint?: string,
   customRates?: Record<string, number>
 ): SplitwiseImportResult {
   const lines = csvContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return { members: [], expenses: [], ignoredCount: 0 };
+  if (lines.length < 2) {
+    const emptyTrip: TripGroup = {
+      id: `trip_sp_${Date.now()}`,
+      name: tripNameHint || 'Splitwise Import',
+      exchangeRates: { baseCurrency: 'USD', rates: {}, lastUpdated: new Date().toISOString() },
+      members: [], expenses: [], createdAt: new Date().toISOString(),
+    };
+    return { trip: emptyTrip, ignoredCount: 0 };
+  }
 
-  const newMembersMap = new Map<string, Member>();
-  existingMembers.forEach((m) => newMembersMap.set(m.name.toLowerCase(), m));
-
+  const membersMap = new Map<string, Member>();
   const expenses: Expense[] = [];
   let ignoredCount = 0;
 
@@ -38,14 +44,14 @@ export function parseSplitwiseCSV(
     }
 
     const paidByName = row[5] || 'Unknown';
-    let payer = newMembersMap.get(paidByName.toLowerCase());
+    let payer = membersMap.get(paidByName.toLowerCase());
     if (!payer) {
-      payer = { id: `mem_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`, name: paidByName };
-      newMembersMap.set(paidByName.toLowerCase(), payer);
+      payer = { id: `m_sp_${Date.now()}_${membersMap.size}`, name: paidByName };
+      membersMap.set(paidByName.toLowerCase(), payer);
     }
 
-    const activeMembers = Array.from(newMembersMap.values());
-    const splitAmount = Math.round((costRaw / (activeMembers.length || 1)) * 100) / 100;
+    const membersList = Array.from(membersMap.values());
+    const splitAmount = Math.round((costRaw / (membersList.length || 1)) * 100) / 100;
 
     const expense: Expense = {
       id: `sp_${Date.now()}_${i}`,
@@ -59,18 +65,26 @@ export function parseSplitwiseCSV(
       date,
       category: mapCategory(categoryRaw),
       splitType: 'equal',
-      splits: activeMembers.map((m) => ({ memberId: m.id, amount: splitAmount })),
+      splits: membersList.map((m) => ({ memberId: m.id, amount: splitAmount })),
       createdAt: new Date().toISOString(),
     };
 
     expenses.push(expense);
   }
 
-  return {
-    members: Array.from(newMembersMap.values()),
+  const members = Array.from(membersMap.values());
+  const newTrip: TripGroup = {
+    id: `trip_sp_${Date.now()}`,
+    name: tripNameHint || 'Splitwise Group Import 📊',
+    description: 'Imported full trip from Splitwise CSV export',
+    supabaseConfig: DEFAULT_SUPABASE_CONFIG,
+    exchangeRates: { baseCurrency: 'USD', rates: {}, lastUpdated: new Date().toISOString() },
+    members,
     expenses,
-    ignoredCount,
+    createdAt: new Date().toISOString(),
   };
+
+  return { trip: newTrip, ignoredCount };
 }
 
 function parseCsvRow(row: string): string[] {

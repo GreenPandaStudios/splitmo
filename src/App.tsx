@@ -51,11 +51,12 @@ export default function App() {
   };
 
   const handleCreateNewTrip = (name: string, description: string, homeCurrency: CurrencyCode, initialMembers: string[]) => {
+    const mems = initialMembers.map((mName, idx) => ({ id: `m_${Date.now()}_${idx}`, name: mName }));
     const newTrip: TripGroup = {
       id: `trip_${Date.now()}`, name, description, supabaseConfig: DEFAULT_SUPABASE_CONFIG,
+      currentMemberId: mems[0]?.id,
       exchangeRates: { baseCurrency: homeCurrency, rates: {}, lastUpdated: new Date().toISOString() },
-      members: initialMembers.map((mName, idx) => ({ id: `m_${Date.now()}_${idx}`, name: mName })),
-      expenses: [], createdAt: new Date().toISOString(),
+      members: mems, expenses: [], createdAt: new Date().toISOString(),
     };
     setTrips((prev) => [...prev, newTrip]); setActiveTripId(newTrip.id); setDisplayCurrency(homeCurrency);
   };
@@ -83,16 +84,19 @@ export default function App() {
   const debtSettlements = simplifyDebts(memberBalances, activeTrip.exchangeRates.rates);
   const filteredExpenses = activeTrip.expenses.filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'all' || e.category === selectedCategory) && (selectedMember === 'all' || e.paidByMemberId === selectedMember));
 
-  const totalNet = memberBalances.reduce((sum, b) => sum + b.netBalanceISK, 0);
+  const myMemberId = activeTrip.currentMemberId || activeTrip.members[0]?.id;
+  const myBalanceObj = memberBalances.find((b) => b.memberId === myMemberId);
+  const myNetBalance = myBalanceObj ? myBalanceObj.netBalanceISK : 0;
+  const myMemberName = activeTrip.members.find((m) => m.id === myMemberId)?.name || 'You';
 
   return (
     <div className="app-shell">
-      <Header tripName={activeTrip.name} displayCurrency={displayCurrency} onSelectCurrency={setDisplayCurrency} onRefreshRate={async () => { const r = await fetchLiveRates(); updateCurrentTrip((t) => ({ ...t, exchangeRates: { ...t.exchangeRates, rates: r } })); }} isDbActive={isSbActive} dbTypeName="Supabase Live ⚡" onOpenTripManager={() => setIsTripManagerOpen(true)} netBalance={totalNet} />
+      <Header tripName={activeTrip.name} displayCurrency={displayCurrency} onSelectCurrency={setDisplayCurrency} onRefreshRate={async () => { const r = await fetchLiveRates(); updateCurrentTrip((t) => ({ ...t, exchangeRates: { ...t.exchangeRates, rates: r } })); }} isDbActive={isSbActive} dbTypeName="Supabase Live ⚡" onOpenTripManager={() => setIsTripManagerOpen(true)} netBalance={myNetBalance} members={activeTrip.members} currentMemberId={myMemberId} onSelectCurrentMember={(id) => updateCurrentTrip((t) => ({ ...t, currentMemberId: id }))} />
 
       <main className="app-main-content">
         {activeTab === 'ledger' && (
           <div className="view-stack">
-            <NetBalanceBanner netBalance={totalNet} displayCurrency={displayCurrency} tripName={activeTrip.name} onOpenTripManager={() => setIsTripManagerOpen(true)} />
+            <NetBalanceBanner netBalance={myNetBalance} displayCurrency={displayCurrency} tripName={activeTrip.name} currentMemberName={myMemberName} onOpenTripManager={() => setIsTripManagerOpen(true)} />
             <QuickActionBar onAddExpense={() => setActiveModal('add')} onScanOcr={() => setActiveModal('ocr')} onImportCsv={() => setActiveModal('import')} onSettleUp={() => setActiveTab('balances')} />
             <ExpenseFilters searchQuery={searchQuery} onSearchChange={setSearchQuery} selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} selectedMember={selectedMember} onMemberChange={setSelectedMember} members={activeTrip.members} />
             <ExpenseList expenses={filteredExpenses} members={activeTrip.members} displayCurrency={displayCurrency} customRates={activeTrip.exchangeRates.rates} onDeleteExpense={(id) => updateCurrentTrip((t) => ({ ...t, expenses: t.expenses.filter((e) => e.id !== id) }))} />
@@ -111,7 +115,7 @@ export default function App() {
       <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
       <AddExpenseModal isOpen={activeModal === 'add'} onClose={() => setActiveModal(null)} onSaveExpense={handleSaveExpense} members={activeTrip.members} customRates={activeTrip.exchangeRates.rates} initialData={ocrInitialData} />
       <ReceiptOcrModal isOpen={activeModal === 'ocr'} onClose={() => setActiveModal(null)} members={activeTrip.members} onReceiptScanned={(data) => { setOcrInitialData(data); setActiveModal('add'); }} />
-      <SplitwiseImportModal isOpen={activeModal === 'import'} onClose={() => setActiveModal(null)} existingMembers={activeTrip.members} customRates={activeTrip.exchangeRates.rates} onImportComplete={(res) => { updateCurrentTrip((t) => ({ ...t, members: res.members, expenses: [...res.expenses, ...t.expenses] })); setActiveTab('ledger'); }} />
+      <SplitwiseImportModal isOpen={activeModal === 'import'} onClose={() => setActiveModal(null)} customRates={activeTrip.exchangeRates.rates} onImportTripComplete={(importedTrip) => { setTrips((prev) => [...prev, importedTrip]); setActiveTripId(importedTrip.id); setActiveTab('ledger'); }} />
       <TripManagerModal isOpen={isTripManagerOpen} onClose={() => setIsTripManagerOpen(false)} trips={trips} activeTripId={activeTrip.id} onSelectTrip={setActiveTripId} onCreateTrip={(n, d) => handleCreateNewTrip(n, d, 'USD', ['Alice', 'Bob'])} onDeleteTrip={(id) => { setTrips((prev) => prev.filter((t) => t.id !== id)); if (activeTrip.id === id) { const remaining = trips.filter((t) => t.id !== id); setActiveTripId(remaining[0]?.id || null); } }} />
     </div>
   );

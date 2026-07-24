@@ -7,6 +7,7 @@ interface NetBalanceBannerProps {
   netBalance: number;
   displayCurrency: CurrencyCode;
   tripName: string;
+  currentMemberName?: string;
   onOpenTripManager: () => void;
 }
 
@@ -14,6 +15,7 @@ export const NetBalanceBanner: React.FC<NetBalanceBannerProps> = ({
   netBalance,
   displayCurrency,
   tripName,
+  currentMemberName = 'You',
   onOpenTripManager,
 }) => {
   const isOwed = netBalance > 0.5;
@@ -39,7 +41,7 @@ export const NetBalanceBanner: React.FC<NetBalanceBannerProps> = ({
 
       <div className="banner-main-amount">
         <span className="banner-sublabel">
-          {isOwed ? 'Overall you are owed' : owes ? 'Overall you owe' : 'You are completely settled up'}
+          {isOwed ? `Overall ${currentMemberName} are owed` : owes ? `Overall ${currentMemberName} owe` : `${currentMemberName} are completely settled up`}
         </span>
         <div className={`banner-figure font-mono ${isOwed ? 'positive' : owes ? 'negative' : ''}`}>
           {isOwed ? `+${absFormatted}` : owes ? `-${absFormatted}` : '$0.00'}

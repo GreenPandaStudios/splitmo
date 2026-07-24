@@ -1,7 +1,7 @@
 import React from 'react';
-import type { CurrencyCode } from '../types';
+import type { CurrencyCode, Member } from '../types';
 import { CURRENCY_LIST } from '../services';
-import { Compass, RefreshCw, Layers } from 'lucide-react';
+import { Compass, RefreshCw, Layers, UserCheck } from 'lucide-react';
 
 interface HeaderProps {
   tripName: string;
@@ -12,6 +12,9 @@ interface HeaderProps {
   dbTypeName?: string;
   onOpenTripManager: () => void;
   netBalance?: number;
+  members: Member[];
+  currentMemberId?: string;
+  onSelectCurrentMember: (memberId: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,7 +24,11 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshRate,
   onOpenTripManager,
   netBalance = 0,
+  members,
+  currentMemberId,
+  onSelectCurrentMember,
 }) => {
+  const currentMember = members.find((m) => m.id === currentMemberId) || members[0];
   const isOwed = netBalance > 0.5;
   const owes = netBalance < -0.5;
 
@@ -58,9 +65,26 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="splitwise-balance-banner">
-        <span className="banner-left">Group Total Status</span>
+        <div className="banner-left-identity">
+          <UserCheck size={14} className="icon-blue" />
+          <span className="banner-user-label">I am:</span>
+          <select
+            value={currentMemberId || members[0]?.id}
+            onChange={(e) => onSelectCurrentMember(e.target.value)}
+            className="select-input identity-select"
+          >
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+
         <span className={`banner-right ${isOwed ? 'positive' : owes ? 'negative' : ''}`}>
-          {isOwed ? `Overall you are owed $${Math.abs(Math.round(netBalance))}` : owes ? `Overall you owe $${Math.abs(Math.round(netBalance))}` : 'You are settled up'}
+          {isOwed
+            ? `${currentMember?.name || 'You'} are owed $${Math.abs(Math.round(netBalance))}`
+            : owes
+            ? `${currentMember?.name || 'You'} owe $${Math.abs(Math.round(netBalance))}`
+            : 'Settled up'}
         </span>
       </div>
     </header>

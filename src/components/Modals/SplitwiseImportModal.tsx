@@ -1,40 +1,45 @@
 import React, { useState } from 'react';
-import type { Member } from '../../types';
+import type { TripGroup } from '../../types';
 import type { SplitwiseImportResult } from '../../services';
-import { parseSplitwiseCSV } from '../../services';
-import { Upload, CheckCircle2, X } from 'lucide-react';
+import { parseSplitwiseCSVToTrip } from '../../services';
+import { Upload, CheckCircle2, X, UserCheck } from 'lucide-react';
 
 interface SplitwiseImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  existingMembers: Member[];
   customRates?: Record<string, number>;
-  iskRate?: number;
-  onImportComplete: (result: SplitwiseImportResult) => void;
+  onImportTripComplete: (importedTrip: TripGroup, currentMemberId?: string) => void;
 }
 
 export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
   isOpen,
   onClose,
-  existingMembers,
   customRates,
-  onImportComplete,
+  onImportTripComplete,
 }) => {
   const [fileName, setFileName] = useState('');
+  const [tripName, setTripName] = useState('Splitwise Group Import');
   const [parseResult, setParseResult] = useState<SplitwiseImportResult | null>(null);
+  const [selectedMyId, setSelectedMyId] = useState<string>('');
 
   if (!isOpen) return null;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const defaultName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
       setFileName(file.name);
+      setTripName(defaultName);
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target?.result as string;
         if (text) {
-          const res = parseSplitwiseCSV(text, existingMembers, customRates);
+          const res = parseSplitwiseCSVToTrip(text, defaultName, customRates);
           setParseResult(res);
+          if (res.trip.members.length > 0) {
+            setSelectedMyId(res.trip.members[0].id);
+          }
         }
       };
       reader.readAsText(file);
@@ -43,7 +48,12 @@ export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
 
   const handleConfirmImport = () => {
     if (parseResult) {
-      onImportComplete(parseResult);
+      const finalTrip: TripGroup = {
+        ...parseResult.trip,
+        name: tripName || parseResult.trip.name,
+        currentMemberId: selectedMyId || parseResult.trip.members[0]?.id,
+      };
+      onImportTripComplete(finalTrip, selectedMyId);
       onClose();
     }
   };
@@ -52,35 +62,55 @@ export const SplitwiseImportModal: React.FC<SplitwiseImportModalProps> = ({
     <div className="modal-backdrop">
       <div className="modal-content glass-card slide-up large-modal">
         <div className="modal-header">
-          <h2>Import Splitwise CSV 📊</h2>
+          <h2>Import Splitwise Group 📊</h2>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
-        <div className="import-modal-body">
+        <div className="import-modal-body modal-form">
           <p className="modal-subtext">
-            Export expenses from Splitwise as a CSV file and upload it here to import all members and expenses automatically.
+            Upload your Splitwise CSV export to import the full group, members, and expenses instantly.
           </p>
 
           <label className="csv-dropzone">
-            <Upload size={28} className="icon-blue" />
-            <span>{fileName ? `Loaded: ${fileName}` : 'Upload Splitwise CSV Export'}</span>
+            <Upload size={24} className="icon-blue" />
+            <span>{fileName ? `Loaded: ${fileName}` : 'Choose Splitwise CSV File'}</span>
             <input type="file" accept=".csv" onChange={handleFileUpload} className="file-input-hidden" />
           </label>
 
           {parseResult && (
-            <div className="import-preview-box">
-              <div className="preview-header">
-                <CheckCircle2 size={18} className="icon-green" />
-                <span>Found {parseResult.expenses.length} expenses to import</span>
+            <div className="import-preview-box view-stack">
+              <div className="form-group">
+                <label className="input-label">Trip / Group Name</label>
+                <input
+                  type="text"
+                  value={tripName}
+                  onChange={(e) => setTripName(e.target.value)}
+                  className="text-input"
+                />
               </div>
 
-              <div className="import-stats">
-                <div className="stat-pill">Members: {parseResult.members.length}</div>
-                <div className="stat-pill">Expenses: {parseResult.expenses.length}</div>
+              <div className="form-group">
+                <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <UserCheck size={13} /> Who are you in this group?
+                </label>
+                <select
+                  value={selectedMyId}
+                  onChange={(e) => setSelectedMyId(e.target.value)}
+                  className="select-input"
+                >
+                  {parseResult.trip.members.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="preview-header">
+                <CheckCircle2 size={16} className="icon-green" />
+                <span>Found {parseResult.trip.expenses.length} expenses across {parseResult.trip.members.length} members</span>
               </div>
 
               <button className="btn-primary full-width" onClick={handleConfirmImport}>
-                Import {parseResult.expenses.length} Expenses Now
+                Import Full Group Ledger
               </button>
             </div>
           )}
