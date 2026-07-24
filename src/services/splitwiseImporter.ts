@@ -35,8 +35,8 @@ export function parseSplitwiseCSVToTrip(
     const description = row[1] || 'Imported Expense';
     const categoryRaw = row[2] || 'other';
     const costRaw = parseFloat(row[3] || row[4] || '0');
-    const currencyRaw = (row[4] && isNaN(Number(row[4])) ? row[4] : 'USD').toUpperCase();
-    const currency: CurrencyCode = (currencyRaw as CurrencyCode) || 'USD';
+    const rawCurrency = row[4] || row[3] || 'USD';
+    const currency = parseCurrencyCode(rawCurrency);
 
     if (isNaN(costRaw) || costRaw <= 0) {
       ignoredCount++;
@@ -78,13 +78,40 @@ export function parseSplitwiseCSVToTrip(
     name: tripNameHint || 'Splitwise Group Import 📊',
     description: 'Imported full trip from Splitwise CSV export',
     supabaseConfig: DEFAULT_SUPABASE_CONFIG,
-    exchangeRates: { baseCurrency: 'USD', rates: {}, lastUpdated: new Date().toISOString() },
+    exchangeRates: { baseCurrency: expenses[0]?.currency || 'USD', rates: {}, lastUpdated: new Date().toISOString() },
     members,
     expenses,
     createdAt: new Date().toISOString(),
   };
 
   return { trip: newTrip, ignoredCount };
+}
+
+function parseCurrencyCode(raw: string): CurrencyCode {
+  const clean = raw.trim().toUpperCase();
+  if (['USD', '$', 'US$'].includes(clean)) return 'USD';
+  if (['ISK', 'KR.', 'ISKR', 'IKR'].includes(clean)) return 'ISK';
+  if (['EUR', '€'].includes(clean)) return 'EUR';
+  if (['GBP', '£'].includes(clean)) return 'GBP';
+  if (['CAD', 'CA$'].includes(clean)) return 'CAD';
+  if (['AUD', 'AU$'].includes(clean)) return 'AUD';
+  if (['JPY', '¥'].includes(clean)) return 'JPY';
+  if (['CHF'].includes(clean)) return 'CHF';
+  if (['NOK'].includes(clean)) return 'NOK';
+  if (['SEK'].includes(clean)) return 'SEK';
+  if (['DKK'].includes(clean)) return 'DKK';
+  if (['INR', '₹'].includes(clean)) return 'INR';
+  if (['BRL', 'R$'].includes(clean)) return 'BRL';
+  if (['MXN', 'MEX$'].includes(clean)) return 'MXN';
+  if (['SGD', 'SG$'].includes(clean)) return 'SGD';
+  if (['NZD', 'NZ$'].includes(clean)) return 'NZD';
+  if (['ZAR', 'R'].includes(clean)) return 'ZAR';
+  if (['THB', '฿'].includes(clean)) return 'THB';
+  if (['PLN', 'ZŁ'].includes(clean)) return 'PLN';
+  if (['HKD', 'HK$'].includes(clean)) return 'HKD';
+  if (['CZK', 'KČ'].includes(clean)) return 'CZK';
+  if (['HUF', 'FT'].includes(clean)) return 'HUF';
+  return 'USD';
 }
 
 function parseCsvRow(row: string): string[] {

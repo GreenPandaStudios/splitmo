@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import type { CurrencyCode } from '../types';
-import { CURRENCY_LIST } from '../services';
-import { Compass, UserPlus, Sparkles } from 'lucide-react';
+import type { TripGroup, CurrencyCode } from '../types';
+import { CURRENCY_LIST, parseSplitwiseCSVToTrip } from '../services';
+import { Compass, UserPlus, Sparkles, Upload } from 'lucide-react';
 
 interface OnboardingScreenProps {
   onCreateTrip: (name: string, description: string, homeCurrency: CurrencyCode, initialMembers: string[]) => void;
+  onImportTrip?: (importedTrip: TripGroup) => void;
 }
 
-export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onCreateTrip }) => {
+export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
+  onCreateTrip,
+  onImportTrip,
+}) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [homeCurrency, setHomeCurrency] = useState<CurrencyCode>('USD');
@@ -21,6 +25,24 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onCreateTrip
         setMembers([...members, ...parsed]);
         setMemberInput('');
       }
+    }
+  };
+
+  const handleCsvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && onImportTrip) {
+      const file = e.target.files[0];
+      const defaultName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        if (text) {
+          const res = parseSplitwiseCSVToTrip(text, defaultName);
+          if (res.trip.expenses.length > 0 || res.trip.members.length > 0) {
+            onImportTrip(res.trip);
+          }
+        }
+      };
+      reader.readAsText(file);
     }
   };
 
@@ -38,8 +60,17 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onCreateTrip
           <Compass size={32} />
         </div>
         <h1 className="onboarding-title">Welcome to Splitmo</h1>
-        <p className="onboarding-sub">Create your first trip ledger to split bills & scan receipts.</p>
+        <p className="onboarding-sub">Create a new trip ledger or import a Splitwise CSV.</p>
       </div>
+
+      {onImportTrip && (
+        <label className="csv-dropzone" style={{ marginBottom: '16px' }}>
+          <Upload size={22} className="icon-blue" />
+          <span><strong>Import Splitwise CSV Export</strong></span>
+          <span style={{ fontSize: '11px', color: 'var(--text-sub)' }}>Creates your trip automatically with all members & expenses</span>
+          <input type="file" accept=".csv" onChange={handleCsvFileUpload} className="file-input-hidden" />
+        </label>
+      )}
 
       <form onSubmit={handleSubmit} className="modal-form">
         <div className="form-group">
