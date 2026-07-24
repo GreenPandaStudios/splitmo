@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot, setDoc, DocumentSnapshot } from 'firebase/firestore';
 import type { TripGroup } from '../types';
 
 export interface FirebaseConfig {
@@ -37,12 +37,12 @@ export function subscribeToTrip(
     const docRef = doc(fb.db, 'trips', tripId);
     return onSnapshot(
       docRef,
-      (snapshot) => {
+      (snapshot: DocumentSnapshot) => {
         if (snapshot.exists()) {
           onUpdate(snapshot.data() as TripGroup);
         }
       },
-      (err) => console.error('Firebase sync error:', err)
+      (err: Error) => console.error('Firebase sync error:', err)
     );
   } catch (err) {
     console.error('Failed to subscribe to Firebase doc:', err);
