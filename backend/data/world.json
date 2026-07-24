@@ -1,0 +1,18 @@
+{
+  "width": 10,
+  "height": 10,
+  "obstacles": [
+    {"x": 3, "y": 3}, {"x": 3, "y": 4}, {"x": 3, "y": 5},
+    {"x": 7, "y": 3}, {"x": 7, "y": 4}, {"x": 7, "y": 5},
+    {"x": 4, "y": 1}, {"x": 5, "y": 1}
+  ],
+  "locations": [
+    {"id": "kitchen", "name": "Espresso Bar", "type": "refill", "x": 9, "y": 9, "caffeineImpact": 100, "icon": "Coffee"},
+    {"id": "conference_table", "name": "Meeting Table", "type": "meeting", "x": 5, "y": 5, "icon": "Briefcase"},
+    {"id": "lounge", "name": "Zen Lounge", "type": "lounge", "x": 0, "y": 9, "icon": "Palette"},
+    {"id": "alice_desk", "name": "Alice's Desk", "type": "workspace", "x": 2, "y": 2, "associatedCharacterId": "alice", "icon": "Award"},
+    {"id": "bob_desk", "name": "Bob's Desk", "type": "workspace", "x": 6, "y": 2, "associatedCharacterId": "bob", "icon": "Award"},
+    {"id": "charlie_desk", "name": "Charlie's Desk", "type": "workspace", "x": 2, "y": 7, "associatedCharacterId": "charlie", "icon": "Award"},
+    {"id": "diana_desk", "name": "Diana's Desk", "type": "workspace", "x": 6, "y": 7, "associatedCharacterId": "diana", "icon": "Award"}
+  ]
+}

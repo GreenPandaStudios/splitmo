@@ -1,0 +1,155 @@
+[
+  {
+    "id": "alice",
+    "name": "Alice",
+    "role": "Developer",
+    "x": 2,
+    "y": 2,
+    "caffeine": 72,
+    "productivity": 90,
+    "currentTask": "Refactoring the auth token security checks",
+    "memories": [],
+    "schedule": [
+      {
+        "startTick": 0,
+        "endTick": 60,
+        "locationId": "alice_desk",
+        "task": "Refactoring the auth token security checks"
+      },
+      {
+        "startTick": 60,
+        "endTick": 100,
+        "locationId": "lounge",
+        "task": "Relaxing on the couch"
+      }
+    ],
+    "avatarEmoji": "👩‍💻",
+    "gradient": "from-purple-500 to-indigo-600",
+    "ring": "ring-purple-400",
+    "goalLocationId": "alice_desk",
+    "dwellTicksRemaining": 2,
+    "bio": "A focused developer who takes pride in clean, secure code. Prefers quiet work, finds PM backlog updates tedious, and is protective of security protocols. Speaks in a direct, technical manner.",
+    "relationships": {
+      "bob": "Finds his project management alignment checkups slightly micro-managing but respects his work.",
+      "charlie": "Enjoys his UX design dedication but finds his animated CSS discussions a bit verbose.",
+      "diana": "Sees her as an eager, coffee-addicted intern who needs guidance but shows great promise."
+    }
+  },
+  {
+    "id": "bob",
+    "name": "Bob",
+    "role": "Project Manager",
+    "x": 6,
+    "y": 2,
+    "caffeine": 72,
+    "productivity": 80,
+    "currentTask": "Updating JIRA backlog and roadmaps",
+    "memories": [
+      "Spoke with Charlie: \"Hey Charlie, how is the Reading UX research articles going? -> Good! Just finishing up. How is your Updating JIRA backlog and roadmaps?\"",
+      "Spoke with Charlie: \"Hey Charlie, how is the Reading UX research articles going? -> Good! Just finishing up. How is your Updating JIRA backlog and roadmaps?\"",
+      "Spoke with Charlie: \"Hey Charlie, how is the Reading UX research articles going? -> Good! Just finishing up. How is your Updating JIRA backlog and roadmaps?\"",
+      "Spoke with Charlie: \"Hey Charlie, how is the Reading UX research articles going? -> Good! Just finishing up. How is your Updating JIRA backlog and roadmaps?\""
+    ],
+    "schedule": [
+      {
+        "startTick": 0,
+        "endTick": 60,
+        "locationId": "bob_desk",
+        "task": "Updating JIRA backlog and roadmaps"
+      },
+      {
+        "startTick": 60,
+        "endTick": 100,
+        "locationId": "lounge",
+        "task": "Reviewing project specifications"
+      }
+    ],
+    "avatarEmoji": "👨‍💼",
+    "gradient": "from-blue-500 to-sky-600",
+    "ring": "ring-blue-400",
+    "goalLocationId": "bob_desk",
+    "dwellTicksRemaining": 0,
+    "bio": "An organized project manager who loves backlog grooming, sprints, and alignment. Wants to keep everyone on schedule but can be slightly micro-managing. Speaks in corporate jargon but is generally supportive.",
+    "relationships": {
+      "alice": "Extremely talented developer, though she can be protective and direct about code checks.",
+      "charlie": "Talented designer, likes working with him on sprint specs.",
+      "diana": "Hardworking intern, helps her coordinate team lunch guidelines and specs."
+    }
+  },
+  {
+    "id": "charlie",
+    "name": "Charlie",
+    "role": "UI/UX Designer",
+    "x": 2,
+    "y": 7,
+    "caffeine": 72,
+    "productivity": 85,
+    "currentTask": "Reading UX research articles",
+    "memories": [
+      "Mock LLM Response"
+    ],
+    "schedule": [
+      {
+        "startTick": 0,
+        "endTick": 60,
+        "locationId": "charlie_desk",
+        "task": "Tuning button responsive paddings and drop-shadows"
+      },
+      {
+        "startTick": 60,
+        "endTick": 100,
+        "locationId": "lounge",
+        "task": "Reading UX research articles"
+      }
+    ],
+    "avatarEmoji": "🎨",
+    "gradient": "from-emerald-500 to-teal-600",
+    "ring": "ring-emerald-400",
+    "goalLocationId": "charlie_desk",
+    "dwellTicksRemaining": 0,
+    "bio": "A creative UI/UX designer obsessed with pixel perfection, user empathy, and beautiful aesthetics. Easily excited by animations and glassmorphism. Speaks enthusiastically about design specs.",
+    "relationships": {
+      "alice": "Admires her strict code quality but wishes she appreciated button micro-interactions more.",
+      "bob": "Organized manager, likes aligning specs with him.",
+      "diana": "Friendly intern, often talks designs or grabs tea with her."
+    }
+  },
+  {
+    "id": "diana",
+    "name": "Diana",
+    "role": "Intern & Coffee Addict",
+    "x": 6,
+    "y": 7,
+    "caffeine": 72,
+    "productivity": 70,
+    "currentTask": "Drafting team lunch guidelines and docs",
+    "memories": [
+      "Spoke with Charlie: \"Hey Diana, how is the Drafting team lunch guidelines and docs going? -> Good! Just finishing up. How is your Reading UX research articles?\""
+    ],
+    "schedule": [
+      {
+        "startTick": 0,
+        "endTick": 60,
+        "locationId": "diana_desk",
+        "task": "Drafting team lunch guidelines and docs"
+      },
+      {
+        "startTick": 60,
+        "endTick": 100,
+        "locationId": "lounge",
+        "task": "Checking Slack channels and sipping tea"
+      }
+    ],
+    "avatarEmoji": "☕",
+    "gradient": "from-amber-500 to-orange-600",
+    "ring": "ring-amber-400",
+    "goalLocationId": "diana_desk",
+    "dwellTicksRemaining": 2,
+    "bio": "An energetic intern who is extremely eager to learn, coffee-obsessed, and handles team coordination docs. Talks with excitement, uses slang occasionally, and looks up to Alice.",
+    "relationships": {
+      "alice": "Inspirational developer! Eager to learn as much as possible from her code audits.",
+      "bob": "Friendly manager, glad to help him out on docs.",
+      "charlie": "Enthusiastic designer, loves discussing visual themes and assets with him."
+    }
+  }
+]
