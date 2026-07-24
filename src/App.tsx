@@ -61,6 +61,14 @@ export default function App() {
     setTrips((prev) => [...prev, newTrip]); setActiveTripId(newTrip.id); setDisplayCurrency(homeCurrency);
   };
 
+  const handleDeleteTrip = (id: string) => {
+    setTrips((prev) => prev.filter((t) => t.id !== id));
+    if (activeTripId === id) {
+      const remaining = trips.filter((t) => t.id !== id);
+      setActiveTripId(remaining[0]?.id || null);
+    }
+  };
+
   const handleSaveExpense = (newExp: Expense) => {
     updateCurrentTrip((t) => ({ ...t, expenses: [newExp, ...t.expenses] }));
     setActiveModal(null); setOcrInitialData(undefined);
@@ -108,7 +116,7 @@ export default function App() {
         )}
 
         {activeTab === 'settings' && (
-          <SettingsView trip={activeTrip} onAddMember={(name) => updateCurrentTrip((t) => ({ ...t, members: [...t.members, { id: `m_${Date.now()}`, name }] }))} onUpdateSupabaseConfig={(cfg) => updateCurrentTrip((t) => ({ ...t, supabaseConfig: cfg }))} onResetTrip={() => updateCurrentTrip((t) => ({ ...t, expenses: [] }))} />
+          <SettingsView trip={activeTrip} onAddMember={(name) => updateCurrentTrip((t) => ({ ...t, members: [...t.members, { id: `m_${Date.now()}`, name }] }))} onUpdateSupabaseConfig={(cfg) => updateCurrentTrip((t) => ({ ...t, supabaseConfig: cfg }))} onResetTrip={() => updateCurrentTrip((t) => ({ ...t, expenses: [] }))} onDeleteCurrentTrip={() => handleDeleteTrip(activeTrip.id)} />
         )}
       </main>
 
@@ -116,7 +124,7 @@ export default function App() {
       <AddExpenseModal isOpen={activeModal === 'add'} onClose={() => setActiveModal(null)} onSaveExpense={handleSaveExpense} members={activeTrip.members} customRates={activeTrip.exchangeRates.rates} initialData={ocrInitialData} />
       <ReceiptOcrModal isOpen={activeModal === 'ocr'} onClose={() => setActiveModal(null)} members={activeTrip.members} onReceiptScanned={(data) => { setOcrInitialData(data); setActiveModal('add'); }} />
       <SplitwiseImportModal isOpen={activeModal === 'import'} onClose={() => setActiveModal(null)} customRates={activeTrip.exchangeRates.rates} onImportTripComplete={(importedTrip) => { setTrips((prev) => [...prev, importedTrip]); setActiveTripId(importedTrip.id); setActiveTab('ledger'); }} />
-      <TripManagerModal isOpen={isTripManagerOpen} onClose={() => setIsTripManagerOpen(false)} trips={trips} activeTripId={activeTrip.id} onSelectTrip={setActiveTripId} onCreateTrip={(n, d) => handleCreateNewTrip(n, d, 'USD', ['Alice', 'Bob'])} onDeleteTrip={(id) => { setTrips((prev) => prev.filter((t) => t.id !== id)); if (activeTrip.id === id) { const remaining = trips.filter((t) => t.id !== id); setActiveTripId(remaining[0]?.id || null); } }} />
+      <TripManagerModal isOpen={isTripManagerOpen} onClose={() => setIsTripManagerOpen(false)} trips={trips} activeTripId={activeTrip.id} onSelectTrip={setActiveTripId} onCreateTrip={(n, d) => handleCreateNewTrip(n, d, 'USD', ['Alice', 'Bob'])} onDeleteTrip={handleDeleteTrip} />
     </div>
   );
 }

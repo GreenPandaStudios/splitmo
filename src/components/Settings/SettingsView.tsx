@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import type { TripGroup } from '../../types';
 import type { SupabaseConfig } from '../../services';
 import { DEFAULT_SUPABASE_CONFIG } from '../../services';
-import { Download, Database, UserPlus, RefreshCw } from 'lucide-react';
+import { Download, Database, UserPlus, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 
 interface SettingsViewProps {
   trip: TripGroup;
   onAddMember: (name: string) => void;
   onUpdateSupabaseConfig: (config: SupabaseConfig) => void;
   onResetTrip: () => void;
+  onDeleteCurrentTrip?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -16,10 +17,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onAddMember,
   onUpdateSupabaseConfig,
   onResetTrip,
+  onDeleteCurrentTrip,
 }) => {
   const [newMemberName, setNewMemberName] = useState('');
   const [sbUrl, setSbUrl] = useState(trip.supabaseConfig?.url || DEFAULT_SUPABASE_CONFIG.url);
   const [sbKey, setSbKey] = useState(trip.supabaseConfig?.anonKey || DEFAULT_SUPABASE_CONFIG.anonKey);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleAddMemberSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,10 +92,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       <div className="glass-card section-block">
-        <h2 className="section-title">Reset Trip Ledger</h2>
-        <button className="btn-secondary" style={{ color: '#f87171' }} onClick={onResetTrip}>
-          <RefreshCw size={14} /> Clear All Expenses
-        </button>
+        <h2 className="section-title">Danger Zone</h2>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button className="btn-secondary" style={{ color: '#f87171' }} onClick={onResetTrip}>
+            <RefreshCw size={14} /> Clear Expenses
+          </button>
+          {onDeleteCurrentTrip && (
+            confirmDelete ? (
+              <button className="btn-primary" style={{ background: '#ef4444', color: '#fff' }} onClick={onDeleteCurrentTrip}>
+                <AlertTriangle size={14} /> Confirm Delete Trip
+              </button>
+            ) : (
+              <button className="btn-secondary" style={{ color: '#ef4444' }} onClick={() => setConfirmDelete(true)}>
+                <Trash2 size={14} /> Delete This Trip
+              </button>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
