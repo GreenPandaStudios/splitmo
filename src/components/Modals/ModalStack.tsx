@@ -49,7 +49,6 @@ export const ModalStack: React.FC<ModalStackProps> = ({
     <ReceiptOcrModal
       isOpen={activeModal === 'ocr'}
       onClose={onCloseModal}
-      members={members}
       onReceiptScanned={onReceiptScanned}
     />
 

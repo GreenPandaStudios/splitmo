@@ -335,3 +335,16 @@
   height: 15px;
   flex-shrink: 0;
 }
+
+.ocr-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ocr-actions .btn-secondary { flex: 1; }
+.ocr-actions .btn-primary { flex: 2; }
+
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

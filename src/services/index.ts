@@ -7,3 +7,4 @@ export * from './firebaseService';
 export * from './supabaseService';
 export * from './settlementExpense';
 export * from './money';
+export * from './receiptParser';

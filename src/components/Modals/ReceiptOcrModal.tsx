@@ -1,145 +1,131 @@
-import React, { useState } from 'react';
-import type { ReceiptOCRResult, Expense, Member } from '../../types';
+import React, { useEffect, useRef, useState } from 'react';
+import type { ReceiptOCRResult, Expense } from '../../types';
 import { scanReceiptImage } from '../../services';
-import { ScanLine, UploadCloud, CheckCircle, Loader2, ArrowRight, X } from 'lucide-react';
+import { OcrResultPanel } from './OcrResultPanel';
+import { UploadCloud, Loader2, X } from 'lucide-react';
 
 interface ReceiptOcrModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReceiptScanned: (partialExpense: Partial<Expense>) => void;
-  members: Member[];
 }
 
-export const ReceiptOcrModal: React.FC<ReceiptOcrModalProps> = ({
-  isOpen,
-  onClose,
-  onReceiptScanned,
-}) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+export const ReceiptOcrModal: React.FC<ReceiptOcrModalProps> = ({ isOpen, onClose, onReceiptScanned }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [progressStatus, setProgressStatus] = useState<string>('');
-  const [ocrResult, setOcrResult] = useState<ReceiptOCRResult | null>(null);
+  const [status, setStatus] = useState('');
+  const [result, setResult] = useState<ReceiptOCRResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const lastFile = useRef<File | null>(null);
+
+  // Object URLs leak unless revoked, and the modal can churn through several photos.
+  const releasePreview = () => {
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+  };
+
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setOcrResult(null);
-    }
-  };
-
-  const handleStartScan = async () => {
-    if (!selectedFile) return;
+  const runScan = async (file: File) => {
     setIsScanning(true);
+    setError(null);
+    setResult(null);
     try {
-      const res = await scanReceiptImage(selectedFile, (pct, status) => {
-        setProgressStatus(`${status} (${pct}%)`);
-      });
-      setOcrResult(res);
-    } catch (err: any) {
-      alert(err.message || 'Error processing receipt image.');
+      const scanned = await scanReceiptImage(file, (pct, label) => setStatus(`${label} ${pct}%`));
+      setResult(scanned);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read that image.');
     } finally {
       setIsScanning(false);
     }
   };
 
-  const handleApplyResult = () => {
-    if (!ocrResult) return;
+  /** Scanning starts as soon as a photo is chosen, so there is no button that can sit dead. */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    releasePreview();
+    lastFile.current = file;
+    setPreviewUrl(URL.createObjectURL(file));
+    void runScan(file);
+  };
+
+  const startOver = () => {
+    releasePreview();
+    lastFile.current = null;
+    setResult(null);
+    setError(null);
+  };
+
+  /**
+   * Hands the scan to the expense form. It must not also call onClose: the parent switches the
+   * active modal to the form, and closing afterwards would cancel that switch.
+   */
+  const applyResult = () => {
+    if (!result) return;
+    startOver();
     onReceiptScanned({
-      title: ocrResult.merchantName || 'Scanned Receipt',
-      amount: ocrResult.totalAmount || 0,
-      currency: ocrResult.currency || 'ISK',
-      date: ocrResult.date || new Date().toISOString().split('T')[0],
-      category: ocrResult.category || 'food',
+      title: result.merchantName || 'Scanned receipt',
+      amount: result.totalAmount || 0,
+      currency: result.currency || 'ISK',
+      date: result.date || new Date().toISOString().split('T')[0],
+      category: result.category || 'food',
     });
-    onClose();
   };
 
   return (
     <div className="modal-backdrop">
       <div className="modal-content glass-card slide-up large-modal">
         <div className="modal-header">
-          <h2>Receipt OCR Scanner 🧾</h2>
-          <button className="close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
+          <h2>Scan a Receipt</h2>
+          <button className="close-btn" onClick={() => { startOver(); onClose(); }}><X size={20} /></button>
         </div>
 
         <div className="ocr-modal-body">
-          <div className="ocr-upload-zone">
-            {previewUrl ? (
-              <div className="preview-image-box">
-                <img src={previewUrl} alt="Receipt preview" className="receipt-preview-img" />
-                <button className="btn-secondary-small change-img-btn" onClick={() => setSelectedFile(null)}>
-                  Change Photo
-                </button>
-              </div>
-            ) : (
-              <label className="dropzone-label">
-                <UploadCloud size={40} className="icon-blue" />
-                <span className="dropzone-title">Upload or Drag Receipt Photo</span>
-                <span className="dropzone-sub">Supports Bónus, Krónan, N1, restaurants (JPEG, PNG, WebP)</span>
-                <input type="file" accept="image/*" onChange={handleFileChange} className="file-input-hidden" />
-              </label>
-            )}
-          </div>
+          {previewUrl ? (
+            <div className="preview-image-box">
+              <img src={previewUrl} alt="Receipt preview" className="receipt-preview-img" />
+              <button className="btn-secondary" onClick={startOver} disabled={isScanning}>
+                Choose a different photo
+              </button>
+            </div>
+          ) : (
+            <label className="dropzone-label">
+              <UploadCloud size={36} className="icon-blue" />
+              <span className="dropzone-title">Take or choose a receipt photo</span>
+              <span className="dropzone-sub">Scanning starts automatically. Works best on a flat, well-lit receipt.</span>
+              <input type="file" accept="image/*" onChange={handleFileChange} className="file-input-hidden" />
+            </label>
+          )}
 
-          <div className="ocr-analysis-zone">
-            {isScanning ? (
-              <div className="ocr-loading-box">
-                <Loader2 size={36} className="spinning-icon icon-blue" />
-                <p className="loading-status">{progressStatus}</p>
-              </div>
-            ) : ocrResult ? (
-              <div className="ocr-results-box">
-                <div className="result-header">
-                  <CheckCircle size={20} className="icon-green" />
-                  <span>Scan Complete</span>
-                </div>
+          {isScanning && (
+            <div className="ocr-loading-box">
+              <Loader2 size={32} className="spinning-icon icon-blue" />
+              <p className="loading-status">{status || 'Reading receipt'}</p>
+            </div>
+          )}
 
-                <div className="extracted-fields-list">
-                  <div className="field-row">
-                    <span className="field-lbl">Merchant:</span>
-                    <strong>{ocrResult.merchantName || 'Unknown Store'}</strong>
-                  </div>
-                  <div className="field-row">
-                    <span className="field-lbl">Extracted Total:</span>
-                    <strong className="text-highlight">
-                      {ocrResult.totalAmount ? `${ocrResult.totalAmount} ${ocrResult.currency}` : 'Not detected'}
-                    </strong>
-                  </div>
-                  <div className="field-row">
-                    <span className="field-lbl">Detected Date:</span>
-                    <span>{ocrResult.date}</span>
-                  </div>
-                  <div className="field-row">
-                    <span className="field-lbl">Auto Category:</span>
-                    <span>{ocrResult.category}</span>
-                  </div>
-                </div>
+          {error && !isScanning && (
+            <div className="ocr-prompt-box">
+              <p className="text-red">{error}</p>
+              <button className="btn-primary" onClick={() => lastFile.current && runScan(lastFile.current)}>
+                Try again
+              </button>
+            </div>
+          )}
 
-                <button className="btn-primary full-width" onClick={handleApplyResult}>
-                  Use Extracted Receipt Data <ArrowRight size={16} />
-                </button>
-              </div>
-            ) : (
-              <div className="ocr-prompt-box">
-                <ScanLine size={36} className="icon-muted" />
-                <p>Select a receipt photo to scan totals in ISK or USD automatically.</p>
-                <button
-                  className="btn-primary"
-                  disabled={!selectedFile}
-                  onClick={handleStartScan}
-                >
-                  Start OCR Scanning
-                </button>
-              </div>
-            )}
-          </div>
+          {result && !isScanning && (
+            <OcrResultPanel
+              result={result}
+              onUse={applyResult}
+              onRescan={() => lastFile.current && runScan(lastFile.current)}
+            />
+          )}
         </div>
       </div>
     </div>
