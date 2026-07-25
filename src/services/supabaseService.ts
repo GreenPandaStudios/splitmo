@@ -29,7 +29,10 @@ export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promis
   try {
     const { data, error } = await client.from('trips').select('*');
     if (error || !data) return [];
-    return data.map((row) => row.data as TripGroup).filter((t) => Boolean(t && t.id && t.name));
+    return data.map((row) => row.data as TripGroup).filter((t) => {
+      if (!t || !t.id || !t.name || !Array.isArray(t.members)) return false;
+      return !t.members.some((m) => /^[-+]?\d/.test(m.name?.trim() || ''));
+    });
   } catch (err) {
     console.error('Failed to fetch trips from Supabase:', err);
     return [];
