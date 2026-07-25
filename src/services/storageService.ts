@@ -1,8 +1,8 @@
 import type { TripGroup } from '../types';
 import { DEFAULT_SUPABASE_CONFIG } from './supabaseService';
 
-const ALL_TRIPS_KEY = 'splitmo_all_trips_v2';
-const ACTIVE_TRIP_ID_KEY = 'splitmo_active_trip_id_v2';
+const ALL_TRIPS_KEY = 'splitmo_all_trips_v3';
+const ACTIVE_TRIP_ID_KEY = 'splitmo_active_trip_id_v3';
 
 export const DEFAULT_ICELAND_TRIP: TripGroup = {
   id: 'iceland_trip_2026',
