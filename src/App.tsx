@@ -3,7 +3,8 @@ import type { TripGroup, CurrencyCode, Expense, DebtSettlement } from './types';
 import {
   loadAllTrips, saveAllTrips, loadActiveTripId, saveActiveTripId,
   fetchLiveRates, calculateMemberBalances, simplifyDebts,
-  subscribeToTripSupabase, syncTripToSupabase, DEFAULT_SUPABASE_CONFIG,
+  subscribeToTripSupabase, syncTripToSupabase, fetchAllTripsFromSupabase,
+  DEFAULT_SUPABASE_CONFIG,
 } from './services';
 import type { TabType } from './components';
 import {
@@ -19,7 +20,6 @@ export default function App() {
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>('USD');
   const [activeTab, setActiveTab] = useState<TabType>('ledger');
   const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
-
   const [activeModal, setActiveModal] = useState<'add' | 'ocr' | 'import' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -28,6 +28,20 @@ export default function App() {
 
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId) || trips[0] || null, [trips, activeTripId]);
   const isSbActive = Boolean(activeTrip?.supabaseConfig?.url || DEFAULT_SUPABASE_CONFIG.url);
+
+  useEffect(() => {
+    fetchAllTripsFromSupabase(DEFAULT_SUPABASE_CONFIG).then((remotes) => {
+      if (remotes && remotes.length > 0) {
+        setTrips((prev) => {
+          const map = new Map<string, TripGroup>();
+          prev.forEach((t) => map.set(t.id, t));
+          remotes.forEach((rt) => map.set(rt.id, rt));
+          return Array.from(map.values());
+        });
+        if (!activeTripId || !remotes.some((r) => r.id === activeTripId)) setActiveTripId(remotes[0].id);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     saveAllTrips(trips);
@@ -53,8 +67,7 @@ export default function App() {
   const handleCreateNewTrip = (name: string, description: string, homeCurrency: CurrencyCode, initialMembers: string[]) => {
     const mems = initialMembers.map((mName, idx) => ({ id: `m_${Date.now()}_${idx}`, name: mName }));
     const newTrip: TripGroup = {
-      id: `trip_${Date.now()}`, name, description, supabaseConfig: DEFAULT_SUPABASE_CONFIG,
-      currentMemberId: mems[0]?.id,
+      id: `trip_${Date.now()}`, name, description, supabaseConfig: DEFAULT_SUPABASE_CONFIG, currentMemberId: mems[0]?.id,
       exchangeRates: { baseCurrency: homeCurrency, rates: {}, lastUpdated: new Date().toISOString() },
       members: mems, expenses: [], createdAt: new Date().toISOString(),
     };
@@ -62,35 +75,19 @@ export default function App() {
   };
 
   const handleImportTrip = (importedTrip: TripGroup) => {
-    setTrips((prev) => [...prev, importedTrip]);
-    setActiveTripId(importedTrip.id);
-    if (importedTrip.expenses[0]?.currency) {
-      setDisplayCurrency(importedTrip.expenses[0].currency);
-    }
+    setTrips((prev) => [...prev, importedTrip]); setActiveTripId(importedTrip.id);
+    if (importedTrip.expenses[0]?.currency) setDisplayCurrency(importedTrip.expenses[0].currency);
     setActiveTab('ledger');
   };
 
   const handleDeleteTrip = (id: string) => {
     setTrips((prev) => prev.filter((t) => t.id !== id));
-    if (activeTripId === id) {
-      const remaining = trips.filter((t) => t.id !== id);
-      setActiveTripId(remaining[0]?.id || null);
-    }
+    if (activeTripId === id) setActiveTripId(trips.filter((t) => t.id !== id)[0]?.id || null);
   };
 
   const handleSaveExpense = (newExp: Expense) => {
     updateCurrentTrip((t) => ({ ...t, expenses: [newExp, ...t.expenses] }));
     setActiveModal(null); setOcrInitialData(undefined);
-  };
-
-  const handleRecordSettlement = (s: DebtSettlement) => {
-    handleSaveExpense({
-      id: `set_${Date.now()}`, title: `Settlement: ${s.fromMemberName} → ${s.toMemberName}`,
-      amount: s.amountISK, currency: displayCurrency, amountInISK: s.amountISK, amountInUSD: s.amountUSD,
-      exchangeRateUsed: 1, paidByMemberId: s.fromMemberId, date: new Date().toISOString().split('T')[0],
-      category: 'other', splitType: 'exact', splits: [{ memberId: s.toMemberId, amount: s.amountISK }],
-      createdAt: new Date().toISOString(),
-    });
   };
 
   if (!activeTrip || trips.length === 0) {
@@ -121,7 +118,7 @@ export default function App() {
         )}
 
         {activeTab === 'balances' && (
-          <DebtGraphMatrix settlements={debtSettlements} balances={memberBalances} displayCurrency={displayCurrency} onRecordSettlement={handleRecordSettlement} />
+          <DebtGraphMatrix settlements={debtSettlements} balances={memberBalances} displayCurrency={displayCurrency} onRecordSettlement={(s) => handleSaveExpense({ id: `set_${Date.now()}`, title: `Settlement: ${s.fromMemberName} → ${s.toMemberName}`, amount: s.amountISK, currency: displayCurrency, amountInISK: s.amountISK, amountInUSD: s.amountUSD, exchangeRateUsed: 1, paidByMemberId: s.fromMemberId, date: new Date().toISOString().split('T')[0], category: 'other', splitType: 'exact', splits: [{ memberId: s.toMemberId, amount: s.amountISK }], createdAt: new Date().toISOString() })} />
         )}
 
         {activeTab === 'settings' && (

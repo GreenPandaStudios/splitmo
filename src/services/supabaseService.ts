@@ -23,6 +23,19 @@ export function getSupabaseClient(config?: SupabaseConfig): SupabaseClient | nul
   return clientCache.get(key) || null;
 }
 
+export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promise<TripGroup[]> {
+  const client = getSupabaseClient(config);
+  if (!client) return [];
+  try {
+    const { data, error } = await client.from('trips').select('*');
+    if (error || !data) return [];
+    return data.map((row) => row.data as TripGroup).filter((t) => Boolean(t && t.id && t.name));
+  } catch (err) {
+    console.error('Failed to fetch trips from Supabase:', err);
+    return [];
+  }
+}
+
 export async function syncTripToSupabase(config: SupabaseConfig | undefined, trip: TripGroup): Promise<boolean> {
   const client = getSupabaseClient(config);
   if (!client) return false;
