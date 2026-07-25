@@ -4,7 +4,7 @@ import {
   loadAllTrips, saveAllTrips, loadActiveTripId, saveActiveTripId,
   fetchLiveRates, calculateMemberBalances, simplifyDebts,
   subscribeToTripSupabase, syncTripToSupabase, fetchAllTripsFromSupabase,
-  DEFAULT_SUPABASE_CONFIG,
+  DEFAULT_SUPABASE_CONFIG, DEFAULT_ICELAND_TRIP,
 } from './services';
 import type { TabType } from './components';
 import {
@@ -25,29 +25,36 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMember, setSelectedMember] = useState('all');
   const [ocrInitialData, setOcrInitialData] = useState<Partial<Expense> | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId) || trips[0] || null, [trips, activeTripId]);
+  useEffect(() => {
+    fetchAllTripsFromSupabase(DEFAULT_SUPABASE_CONFIG)
+      .then((remotes) => {
+        if (remotes && remotes.length > 0) {
+          setTrips(remotes);
+          const hasActive = remotes.find((r) => r.id === activeTripId);
+          setActiveTripId(hasActive ? hasActive.id : remotes[0].id);
+        } else if (trips.length === 0) {
+          setTrips([DEFAULT_ICELAND_TRIP]);
+          setActiveTripId(DEFAULT_ICELAND_TRIP.id);
+        }
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const activeTrip = useMemo(() => {
+    return trips.find((t) => t.id === activeTripId) || trips[0] || DEFAULT_ICELAND_TRIP;
+  }, [trips, activeTripId]);
+
   const isSbActive = Boolean(activeTrip?.supabaseConfig?.url || DEFAULT_SUPABASE_CONFIG.url);
 
   useEffect(() => {
-    fetchAllTripsFromSupabase(DEFAULT_SUPABASE_CONFIG).then((remotes) => {
-      if (remotes && remotes.length > 0) {
-        setTrips((prev) => {
-          const map = new Map<string, TripGroup>();
-          prev.forEach((t) => map.set(t.id, t));
-          remotes.forEach((rt) => map.set(rt.id, rt));
-          return Array.from(map.values());
-        });
-        if (!activeTripId || !remotes.some((r) => r.id === activeTripId)) setActiveTripId(remotes[0].id);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    saveAllTrips(trips);
-    if (activeTripId) saveActiveTripId(activeTripId);
-    if (activeTrip) syncTripToSupabase(activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG, activeTrip);
-  }, [trips, activeTripId, activeTrip]);
+    if (!isLoading && trips.length > 0) {
+      saveAllTrips(trips);
+      if (activeTripId) saveActiveTripId(activeTripId);
+      if (activeTrip) syncTripToSupabase(activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG, activeTrip);
+    }
+  }, [trips, activeTripId, activeTrip, isLoading]);
 
   useEffect(() => {
     if (activeTrip) {
@@ -81,14 +88,19 @@ export default function App() {
   };
 
   const handleDeleteTrip = (id: string) => {
-    setTrips((prev) => prev.filter((t) => t.id !== id));
-    if (activeTripId === id) setActiveTripId(trips.filter((t) => t.id !== id)[0]?.id || null);
+    const remaining = trips.filter((t) => t.id !== id);
+    setTrips(remaining);
+    if (activeTripId === id) setActiveTripId(remaining[0]?.id || null);
   };
 
   const handleSaveExpense = (newExp: Expense) => {
     updateCurrentTrip((t) => ({ ...t, expenses: [newExp, ...t.expenses] }));
     setActiveModal(null); setOcrInitialData(undefined);
   };
+
+  if (isLoading) {
+    return <div className="app-shell flex-center" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--text-sub)' }}>Loading Iceland Trip Ledger...</p></div>;
+  }
 
   if (!activeTrip || trips.length === 0) {
     return <div className="app-shell"><OnboardingScreen onCreateTrip={handleCreateNewTrip} onImportTrip={handleImportTrip} /></div>;
