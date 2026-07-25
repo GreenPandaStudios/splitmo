@@ -66,7 +66,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
       {isExpanded && (
         <>
           <div className="expense-splits-expanded-box">
-            {expense.splits.map((s) => {
+            {expense.splits.filter((s) => s.amount > 0).map((s) => {
               const memberName = members.find((m) => m.id === s.memberId)?.name || 'Member';
               const splitVal = convertCurrency(s.amount, expense.currency, displayCurrency, customRates);
               return (

@@ -5,7 +5,7 @@ export interface Member {
   avatarUrl?: string;
 }
 
-export type SplitType = 'equal' | 'exact' | 'percentage' | 'shares';
+export type SplitType = 'equal' | 'exact';
 
 export interface MemberBalance {
   memberId: string;

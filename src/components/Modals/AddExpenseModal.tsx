@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import type { Expense, Member, CurrencyCode, ExpenseCategory, SplitType, SplitShare } from '../../types';
+import type { Expense, Member, CurrencyCode, ExpenseCategory } from '../../types';
 import { CURRENCY_LIST, convertCurrency } from '../../services';
 import { SplitSelector } from './SplitSelector';
+import { useSplitPlan } from './useSplitPlan';
 import { CategoryPayerSelector } from './CategoryPayerSelector';
 import { Plus, X } from 'lucide-react';
 
@@ -22,10 +23,17 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [currency, setCurrency] = useState<CurrencyCode>(initialData?.currency || 'USD');
   const [paidBy, setPaidBy] = useState<string>(initialData?.paidByMemberId || members[0]?.id || '');
   const [category, setCategory] = useState<ExpenseCategory>(initialData?.category || 'food');
-  const [splitType, setSplitType] = useState<SplitType>(initialData?.splitType || 'equal');
   // Existing entries may carry a full ISO timestamp; <input type="date"> needs the date part only.
   const [date, setDate] = useState<string>((initialData?.date || new Date().toISOString()).split('T')[0]);
-  const [splits, setSplits] = useState<SplitShare[]>(initialData?.splits || members.map((m) => ({ memberId: m.id, amount: 0 })));
+
+  const numericAmount = parseFloat(amount) || 0;
+  const plan = useSplitPlan({
+    members,
+    total: numericAmount,
+    currency,
+    initialSplits: initialData?.splits,
+    initialSplitType: initialData?.splitType,
+  });
 
   if (!isOpen) return null;
 
@@ -33,10 +41,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     e.preventDefault();
     const numAmount = parseFloat(amount);
     if (!title || isNaN(numAmount) || numAmount <= 0 || !paidBy || !date) return;
-
-    const finalSplits = splitType === 'equal'
-      ? members.map((m) => ({ memberId: m.id, amount: Math.round((numAmount / (members.length || 1)) * 100) / 100 }))
-      : splits;
+    if (!plan.isValid) return;
 
     const newExpense: Expense = {
       id: initialData?.id || `exp_${Date.now()}`,
@@ -45,7 +50,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       amountInUSD: convertCurrency(numAmount, currency, 'USD', customRates),
       exchangeRateUsed: customRates?.[currency] || 1, paidByMemberId: paidBy,
       date,
-      category, splitType, splits: finalSplits,
+      category, splitType: plan.splitType, splits: plan.finalSplits,
       createdAt: initialData?.createdAt || new Date().toISOString(),
     };
 
@@ -89,11 +94,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           </div>
 
           <CategoryPayerSelector paidBy={paidBy} onPaidByChange={setPaidBy} category={category} onCategoryChange={setCategory} members={members} />
-          <SplitSelector splitType={splitType} onSplitTypeChange={setSplitType} members={members} splits={splits} onUpdateSplit={(mId, val) => setSplits((prev) => prev.map((s) => (s.memberId === mId ? { ...s, amount: val } : s)))} totalAmount={parseFloat(amount) || 0} currency={currency} />
+          <SplitSelector plan={plan} members={members} currency={currency} total={numericAmount} />
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary" disabled={!plan.isValid}>
               {initialData?.id ? 'Save Changes' : <><Plus size={16} /> Save Expense</>}
             </button>
           </div>

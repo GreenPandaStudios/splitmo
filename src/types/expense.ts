@@ -13,8 +13,6 @@ export type ExpenseCategory =
 export interface SplitShare {
   memberId: string;
   amount: number;
-  percentage?: number;
-  shares?: number;
 }
 
 export interface Expense {
