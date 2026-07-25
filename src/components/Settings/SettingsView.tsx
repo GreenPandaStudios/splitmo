@@ -5,8 +5,10 @@ import { TripDetailsSection } from './TripDetailsSection';
 import { TravelersSection } from './TravelersSection';
 import { SyncSection } from './SyncSection';
 import { DangerZone } from './DangerZone';
+import { InstallSection } from './InstallSection';
 import { exportLedgerCsv } from './exportLedgerCsv';
-import { Download, Map } from 'lucide-react';
+import { shareTripLink } from '../../services';
+import { Download, Map, Share2 } from 'lucide-react';
 
 interface SettingsViewProps {
   trip: TripGroup;
@@ -40,6 +42,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const entryLabel = trip.expenses.length === 1 ? 'entry' : 'entries';
 
+  const handleShare = async () => {
+    const outcome = await shareTripLink(trip.id, trip.name);
+    if (outcome === 'copied') onNotify?.('Ledger link copied');
+    else if (outcome === 'failed') onNotify?.('Could not share the link');
+  };
+
   return (
     <div className="tab-panel">
       <section className="section-block">
@@ -62,9 +70,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <section className="section-block">
         <h2 className="section-title">Trips</h2>
         <p className="section-sub">Switch between ledgers or remove old ones</p>
-        <div className="section-body">
+        <div className="section-body danger-actions">
           <button className="btn-secondary" onClick={onOpenTripManager}>
             <Map size={14} /> Manage {tripCount} {tripCount === 1 ? 'trip' : 'trips'}
+          </button>
+          <button className="btn-secondary" onClick={handleShare}>
+            <Share2 size={14} /> Share this ledger
           </button>
         </div>
       </section>
@@ -77,6 +88,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onUpdateSupabaseConfig={onUpdateSupabaseConfig}
         onRefreshRates={onRefreshRates}
       />
+
+      <InstallSection />
 
       <DangerZone onResetTrip={onResetTrip} onDeleteCurrentTrip={onDeleteCurrentTrip} />
     </div>

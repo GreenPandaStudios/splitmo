@@ -3,7 +3,7 @@ import type { TripGroup, CurrencyCode, Expense } from '../types';
 import {
   loadAllTrips, saveAllTrips, saveActiveTripId, loadIdentities, saveIdentities,
   subscribeToTripSupabase, syncTripToSupabase, fetchAllTripsFromSupabase,
-  DEFAULT_SUPABASE_CONFIG, DEFAULT_ICELAND_TRIP,
+  DEFAULT_SUPABASE_CONFIG, DEFAULT_ICELAND_TRIP, tripIdFromHash, setTripHash,
 } from '../services';
 
 /** Trips whose ids carry the `trip_sp_` prefix came from a corrupted sync and are not persisted. */
@@ -14,20 +14,31 @@ export function useTripStore() {
   const [trips, setTrips] = useState<TripGroup[]>(() => loadAllTrips().filter(isPersistable));
   const [activeTripId, setActiveTripId] = useState<string | null>(DEFAULT_ICELAND_TRIP.id);
   const [identities, setIdentities] = useState<Record<string, string>>(loadIdentities);
-  const [isLoading, setIsLoading] = useState(true);
+  // With ledgers already on the device there is nothing to wait for: render them now and let the
+  // remote fetch refresh in the background. Only a cold start blocks on the network.
+  const [isLoading, setIsLoading] = useState(() => trips.length === 0);
   /** Client-clock timestamp of the newest local edit, used to reject stale realtime echoes. */
   const lastLocalMutationAt = useRef(0);
 
   useEffect(() => {
     fetchAllTripsFromSupabase(DEFAULT_SUPABASE_CONFIG)
       .then((remotes) => {
+        // A shared #/trip/<id> link selects that ledger, when it is one we can see.
+        const linked = tripIdFromHash();
+
         if (remotes && remotes.length > 0) {
           setTrips(remotes);
-          setActiveTripId(remotes[0].id);
-        } else {
-          setTrips([DEFAULT_ICELAND_TRIP]);
-          setActiveTripId(DEFAULT_ICELAND_TRIP.id);
+          setActiveTripId((remotes.find((t) => t.id === linked) || remotes[0]).id);
+          return;
         }
+
+        // Offline (or an empty project) must not clobber the ledgers already on this device with
+        // seed data; the local copy is the real one until the network says otherwise.
+        setTrips((local) => {
+          const kept = local.length > 0 ? local : [DEFAULT_ICELAND_TRIP];
+          setActiveTripId((kept.find((t) => t.id === linked) || kept[0]).id);
+          return kept;
+        });
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -36,6 +47,11 @@ export function useTripStore() {
     () => trips.find((t) => t.id === activeTripId) || trips[0] || DEFAULT_ICELAND_TRIP,
     [trips, activeTripId]
   );
+
+  // Keep the address bar pointing at the open ledger so the link is always shareable.
+  useEffect(() => {
+    if (!isLoading && activeTrip.id) setTripHash(activeTrip.id);
+  }, [activeTrip.id, isLoading]);
 
   useEffect(() => {
     if (isLoading || trips.length === 0 || !isPersistable(activeTrip)) return;

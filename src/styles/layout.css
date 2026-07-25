@@ -181,3 +181,44 @@
   pointer-events: none;
   z-index: 300;
 }
+
+/* Install nudge, shown once until dismissed */
+.install-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--rule-dash);
+  border-radius: var(--radius-md);
+  background: var(--paper-sunk);
+  animation: sm-fade 0.3s ease;
+}
+
+.install-banner-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--ink-mute);
+}
+
+.install-banner-copy strong { font-size: 13px; color: var(--ink); }
+
+.install-ios-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}

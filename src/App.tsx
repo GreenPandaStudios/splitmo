@@ -3,7 +3,7 @@ import type { CurrencyCode, Expense, TripGroup } from './types';
 import { fetchLiveRates, buildSettlementExpense } from './services';
 import { useTripStore, useToast, useTripBalances } from './hooks';
 import type { TabType, ModalKind } from './components';
-import { Header, NavigationTabs, TabContent, ModalStack, OnboardingScreen, Toast } from './components';
+import { Header, NavigationTabs, TabContent, ModalStack, OnboardingScreen, Toast, InstallBanner } from './components';
 
 export default function App() {
   const store = useTripStore();
@@ -89,6 +89,8 @@ export default function App() {
         currentMemberId={store.currentMemberId}
         onSelectCurrentMember={(id) => store.setCurrentMember(id)}
       />
+
+      <InstallBanner />
 
       <main className="app-main-content">
         <TabContent

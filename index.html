@@ -2,28 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Splitmo — Trip Ledger</title>
+    <meta name="description" content="Split trip expenses with friends. Scan receipts, track who owes what, and settle up in any currency." />
+
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#38bdf8" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <meta name="theme-color" content="#F8F4EB" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="description" content="Splitmo - Iceland Trip Expense Splitter & Receipt OCR. Split bills in ISK & USD, import Splitwise CSV, and sync via Supabase." />
-    <title>Splitmo 🇮🇸 - Iceland Trip Expense Splitter</title>
-    <script>
-      // Nuclear cleanup: nuke all stale caches, service workers, and localStorage before React boots
-      try {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++)r[i].unregister()});
-        }
-        if ('caches' in window) {
-          caches.keys().then(function(n){for(var i=0;i<n.length;i++)caches.delete(n[i])});
-        }
-        Object.keys(localStorage).forEach(function(k){
-          if(k.startsWith('splitmo_')&&k.indexOf('_v5')===-1) localStorage.removeItem(k);
-        });
-      } catch(e){}
-    </script>
+    <meta name="apple-mobile-web-app-title" content="Splitmo" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>

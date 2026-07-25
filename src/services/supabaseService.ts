@@ -23,14 +23,28 @@ export function getSupabaseClient(config?: SupabaseConfig): SupabaseClient | nul
   return clientCache.get(key) || null;
 }
 
+/** Offline the client can hang indefinitely, which would strand the UI on its loading screen. */
+const FETCH_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(work: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), FETCH_TIMEOUT_MS)),
+  ]);
+}
+
 export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promise<TripGroup[]> {
   const client = getSupabaseClient(config);
   if (!client) return [];
   try {
-    const { data, error } = await client.from('trips').select('*');
+    type TripRows = { data: { data: TripGroup }[] | null; error: unknown };
+    // The query builder is a thenable rather than a real Promise, so adapt it before racing.
+    const query = Promise.resolve(client.from('trips').select('*')) as Promise<TripRows>;
+    const { data, error } = await withTimeout<TripRows>(query, { data: null, error: 'timeout' });
+
     if (error || !data) return [];
     return data
-      .map((row) => row.data as TripGroup)
+      .map((row) => row.data)
       .filter((t) => {
         if (!t || !t.id || !t.name || !Array.isArray(t.members) || !Array.isArray(t.expenses)) return false;
         if (t.id.startsWith('trip_sp_')) return false;
