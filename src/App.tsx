@@ -15,8 +15,11 @@ import {
 } from './components';
 
 export default function App() {
-  const [trips, setTrips] = useState<TripGroup[]>(loadAllTrips);
-  const [activeTripId, setActiveTripId] = useState<string | null>(loadActiveTripId);
+  const [trips, setTrips] = useState<TripGroup[]>(() => {
+    const loaded = loadAllTrips();
+    return loaded.filter((t) => !t.id.startsWith('trip_sp_') && t.expenses.length <= 10);
+  });
+  const [activeTripId, setActiveTripId] = useState<string | null>(DEFAULT_ICELAND_TRIP.id);
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>('USD');
   const [activeTab, setActiveTab] = useState<TabType>('ledger');
   const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
@@ -32,9 +35,8 @@ export default function App() {
       .then((remotes) => {
         if (remotes && remotes.length > 0) {
           setTrips(remotes);
-          const hasActive = remotes.find((r) => r.id === activeTripId);
-          setActiveTripId(hasActive ? hasActive.id : remotes[0].id);
-        } else if (trips.length === 0) {
+          setActiveTripId(remotes[0].id);
+        } else {
           setTrips([DEFAULT_ICELAND_TRIP]);
           setActiveTripId(DEFAULT_ICELAND_TRIP.id);
         }
@@ -49,15 +51,15 @@ export default function App() {
   const isSbActive = Boolean(activeTrip?.supabaseConfig?.url || DEFAULT_SUPABASE_CONFIG.url);
 
   useEffect(() => {
-    if (!isLoading && trips.length > 0) {
+    if (!isLoading && trips.length > 0 && activeTrip && !activeTrip.id.startsWith('trip_sp_')) {
       saveAllTrips(trips);
       if (activeTripId) saveActiveTripId(activeTripId);
-      if (activeTrip) syncTripToSupabase(activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG, activeTrip);
+      syncTripToSupabase(activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG, activeTrip);
     }
   }, [trips, activeTripId, activeTrip, isLoading]);
 
   useEffect(() => {
-    if (activeTrip) {
+    if (activeTrip && !activeTrip.id.startsWith('trip_sp_')) {
       const cfg = activeTrip.supabaseConfig || DEFAULT_SUPABASE_CONFIG;
       const unsub = subscribeToTripSupabase(cfg, activeTrip.id, (remote: TripGroup) => {
         setTrips((prev) => prev.map((t) => (t.id === remote.id ? remote : t)));

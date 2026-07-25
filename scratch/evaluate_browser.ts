@@ -4,23 +4,18 @@ async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
 
-  page.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()));
-  page.on('pageerror', err => console.log('PAGE ERROR UNHANDLED:', err));
-  page.on('requestfailed', req => console.log('FAILED REQ:', req.url(), req.failure()?.errorText));
+  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
 
-  await page.goto('https://greenpandastudios.github.io/splitmo/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(2000);
+  console.log("Navigating to http://localhost:4173/ ...");
+  await page.goto('http://localhost:4173/', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(3000);
 
-  const debugInfo = await page.evaluate(() => {
-    return {
-      title: document.title,
-      reactRoot: Boolean(document.getElementById('root')?.children.length),
-      localStorage: Object.keys(localStorage).map(k => ({ key: k, val: localStorage.getItem(k) })),
-    };
-  });
+  const text = await page.evaluate(() => document.body.innerText);
+  console.log("=== RENDERED LOCAL PREVIEW PAGE TEXT ===");
+  console.log(text);
 
-  console.log("=== DEBUG INFO ===");
-  console.log(JSON.stringify(debugInfo, null, 2));
+  await page.screenshot({ path: '/Users/august/.gemini/antigravity/brain/6ff1a172-735d-4b64-968f-8d93ffa986e9/live_app_screenshot.png', fullPage: true });
 
   await browser.close();
 }

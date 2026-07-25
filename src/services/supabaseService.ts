@@ -29,10 +29,13 @@ export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promis
   try {
     const { data, error } = await client.from('trips').select('*');
     if (error || !data) return [];
-    return data.map((row) => row.data as TripGroup).filter((t) => {
-      if (!t || !t.id || !t.name || !Array.isArray(t.members)) return false;
-      return !t.members.some((m) => /^[-+]?\d/.test(m.name?.trim() || ''));
-    });
+    return data
+      .map((row) => row.data as TripGroup)
+      .filter((t) => {
+        if (!t || !t.id || !t.name || !Array.isArray(t.members)) return false;
+        if (t.id.startsWith('trip_sp_') || t.expenses?.length > 10) return false;
+        return !t.members.some((m) => /^[-+]?\d/.test(m.name?.trim() || ''));
+      });
   } catch (err) {
     console.error('Failed to fetch trips from Supabase:', err);
     return [];
@@ -40,6 +43,7 @@ export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promis
 }
 
 export async function syncTripToSupabase(config: SupabaseConfig | undefined, trip: TripGroup): Promise<boolean> {
+  if (!trip || trip.id.startsWith('trip_sp_') || trip.expenses?.length > 10) return false;
   const client = getSupabaseClient(config);
   if (!client) return false;
   try {
@@ -74,7 +78,7 @@ export function subscribeToTripSupabase(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` },
       (payload) => {
-        if (payload.new?.data) {
+        if (payload.new?.data && !payload.new.id.startsWith('trip_sp_')) {
           onRemoteUpdate(payload.new.data as TripGroup);
         }
       }
