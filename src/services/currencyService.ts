@@ -39,8 +39,12 @@ export function convertCurrency(
 ): number {
   if (from === to || !amount || isNaN(amount)) return isNaN(amount) ? 0 : amount;
   const rates = { ...DEFAULT_RATES, ...(customRates && typeof customRates === 'object' ? customRates : {}) };
-  const fromRate = rates[from] && !isNaN(rates[from]) ? rates[from] : DEFAULT_RATES[from] || 1;
-  const toRate = rates[to] && !isNaN(rates[to]) ? rates[to] : DEFAULT_RATES[to] || 1;
+  let fromRate = rates[from] && !isNaN(rates[from]) && rates[from] > 0 ? rates[from] : DEFAULT_RATES[from] || 1;
+  let toRate = rates[to] && !isNaN(rates[to]) && rates[to] > 0 ? rates[to] : DEFAULT_RATES[to] || 1;
+
+  if (from === 'ISK' && fromRate <= 1.1) fromRate = DEFAULT_RATES['ISK'];
+  if (to === 'ISK' && toRate <= 1.1) toRate = DEFAULT_RATES['ISK'];
+
   const inUSD = amount / fromRate;
   const converted = inUSD * toRate;
   return to === 'ISK' || to === 'JPY' || to === 'HUF' ? Math.round(converted) : Math.round(converted * 100) / 100;
@@ -50,7 +54,7 @@ export function formatCurrency(amount: number, currency: CurrencyCode): string {
   const meta = CURRENCY_LIST.find((c) => c.code === currency);
   const symbol = meta?.symbol || '$';
   if (currency === 'ISK' || currency === 'JPY' || currency === 'HUF') {
-    return `${Math.round(amount).toLocaleString()} ${symbol}`;
+    return `${Math.round(amount).toLocaleString()} kr.`;
   }
   return `${symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

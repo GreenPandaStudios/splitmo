@@ -1,8 +1,8 @@
 import type { TripGroup } from '../types';
 import { DEFAULT_SUPABASE_CONFIG } from './supabaseService';
 
-const ALL_TRIPS_KEY = 'splitmo_all_trips_v3';
-const ACTIVE_TRIP_ID_KEY = 'splitmo_active_trip_id_v3';
+const ALL_TRIPS_KEY = 'splitmo_all_trips_v4';
+const ACTIVE_TRIP_ID_KEY = 'splitmo_active_trip_id_v4';
 
 export const DEFAULT_ICELAND_TRIP: TripGroup = {
   id: 'iceland_trip_2026',
@@ -108,7 +108,14 @@ export function loadAllTrips(): TripGroup[] {
     const raw = localStorage.getItem(ALL_TRIPS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const sanitized = parsed.filter((t: TripGroup) => {
+          if (!t || !t.id || !t.name || !Array.isArray(t.members)) return false;
+          const memberCorrupted = t.members.some((m) => /^[-+]?\d/.test(m.name?.trim() || ''));
+          return !memberCorrupted && t.expenses.length <= 10;
+        });
+        if (sanitized.length > 0) return sanitized;
+      }
     }
   } catch (err) {
     console.error('Failed to load trips:', err);
