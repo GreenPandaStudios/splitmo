@@ -49,7 +49,7 @@ export function calculateMemberBalances(
 
 export function simplifyDebts(
   memberBalances: MemberBalance[],
-  customRates?: Record<string, number>
+  _customRates?: Record<string, number>
 ): DebtSettlement[] {
   const debtors = memberBalances
     .filter((b) => b.netBalanceISK < -0.05)

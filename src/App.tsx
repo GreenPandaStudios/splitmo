@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { TripGroup, CurrencyCode, Expense, DebtSettlement } from './types';
+import type { TripGroup, CurrencyCode, Expense } from './types';
 import {
-  loadAllTrips, saveAllTrips, loadActiveTripId, saveActiveTripId,
+  loadAllTrips, saveAllTrips, saveActiveTripId,
   fetchLiveRates, calculateMemberBalances, simplifyDebts,
   subscribeToTripSupabase, syncTripToSupabase, fetchAllTripsFromSupabase,
   DEFAULT_SUPABASE_CONFIG, DEFAULT_ICELAND_TRIP,
