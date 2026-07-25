@@ -1,0 +1,140 @@
+/* Trip header, traveler pills, monogram avatars and the net-balance figure. */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  padding-top: 22px;
+}
+
+.header-top-bar {
+  padding: 0 20px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.header-trip-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.curr-select-header {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  padding: 6px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-outline-pill {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-pill);
+  padding: 7px 13px;
+  cursor: pointer;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-outline-pill:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Traveler pills — tap one to say "this is me" */
+.member-pills-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.member-pills-row::-webkit-scrollbar { display: none; }
+
+.member-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px 4px 4px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.member-pill.selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.avatar-monogram {
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.member-pill.selected .avatar-monogram {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Net balance figure — the one loud number in the app */
+.net-balance-block {
+  padding: 22px 20px 24px;
+  border-top: 1px dashed var(--rule-dash);
+  border-bottom: 1px dashed var(--rule-dash);
+}
+
+.net-balance-caption {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  margin-bottom: 8px;
+}
+
+.net-balance-figure {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.net-balance-figure.positive { color: var(--credit); }
+.net-balance-figure.negative { color: var(--debit); }

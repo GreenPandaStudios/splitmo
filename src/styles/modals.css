@@ -1,0 +1,282 @@
+/* Sheet-style modals: add expense, receipt OCR, CSV import, trip manager. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(30% 0.02 75 / 0.42);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+@media (min-width: 600px) {
+  .modal-backdrop {
+    align-items: center;
+    padding: 16px;
+  }
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.16);
+}
+
+@media (min-width: 600px) {
+  .modal-content {
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  }
+}
+
+.modal-content.large-modal { max-width: 560px; }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--rule-dash);
+}
+
+.modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.modal-subtext {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.modal-footer .btn-secondary { flex: 1; }
+.modal-footer .btn-primary { flex: 2; }
+
+/* Split editor */
+.split-selector-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--paper-sunk);
+  border-radius: var(--radius-md);
+}
+
+.split-type-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.split-type-btn {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-sub);
+  cursor: pointer;
+}
+
+.split-type-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.split-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.split-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.split-member-row:last-child { border-bottom: none; }
+
+.equal-share-display {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-sub);
+}
+
+.input-with-symbol {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.input-with-symbol .split-num-input {
+  width: 88px;
+  padding: 6px 8px;
+}
+
+.input-curr-suffix {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+/* Upload zones */
+.csv-dropzone,
+.dropzone-label {
+  border: 1.5px dashed var(--rule-dash);
+  border-radius: var(--radius-md);
+  padding: 22px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: var(--paper-sunk);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.csv-dropzone:hover,
+.dropzone-label:hover { border-color: var(--ink); }
+
+.dropzone-title { font-size: 13.5px; font-weight: 700; }
+.dropzone-sub { font-size: 11.5px; font-weight: 400; color: var(--ink-mute); }
+.file-input-hidden { display: none; }
+
+/* OCR panel */
+.ocr-modal-body,
+.import-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.preview-image-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.receipt-preview-img {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule-strong);
+}
+
+.ocr-loading-box,
+.ocr-prompt-box,
+.ocr-results-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-mute);
+}
+
+.ocr-results-box { align-items: stretch; text-align: left; }
+
+.loading-status {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.result-header,
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.extracted-fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Trip manager */
+.trip-manager-grid,
+.trip-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trip-selector-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.trip-selector-card.active { border-color: var(--ink); }
+.trip-card-title { font-family: var(--font-display); font-size: 13.5px; font-weight: 600; }
+.trip-card-sub { font-size: 11px; color: var(--ink-mute); }
+
+.create-trip-section h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.sql-snippet-box {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  overflow-x: auto;
+  white-space: pre;
+}

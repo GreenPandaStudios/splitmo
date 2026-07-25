@@ -20,20 +20,22 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
 
   return (
     <nav className="nav-tabs-container">
-      {tabs.map((t) => {
-        const Icon = t.icon;
-        const isActive = activeTab === t.id;
-        return (
-          <button
-            key={t.id}
-            className={`nav-tab-btn ${isActive ? 'active' : ''}`}
-            onClick={() => onSelectTab(t.id)}
-          >
-            <Icon size={18} />
-            <span>{t.label}</span>
-          </button>
-        );
-      })}
+      <div className="nav-tabs-track">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          const isActive = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              className={`nav-tab-btn ${isActive ? 'active' : ''}`}
+              onClick={() => onSelectTab(t.id)}
+            >
+              <Icon size={16} />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 };

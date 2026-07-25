@@ -1,14 +1,15 @@
 import React from 'react';
 import type { Expense, Member, CurrencyCode } from '../../types';
 import { ExpenseCard } from './ExpenseCard';
-import { Inbox } from 'lucide-react';
 
 interface ExpenseListProps {
   expenses: Expense[];
   members: Member[];
   displayCurrency: CurrencyCode;
   customRates?: Record<string, number>;
+  onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
+  emptyMessage?: string;
 }
 
 export const ExpenseList: React.FC<ExpenseListProps> = ({
@@ -16,16 +17,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   members,
   displayCurrency,
   customRates,
+  onEditExpense,
   onDeleteExpense,
+  emptyMessage = 'No expenses match your filters.',
 }) => {
   if (expenses.length === 0) {
-    return (
-      <div className="empty-state-box glass-card">
-        <Inbox size={36} className="icon-muted" />
-        <p className="empty-title">No expenses recorded yet</p>
-        <p className="empty-subtext">Tap '+' or scan a receipt to log your first expense.</p>
-      </div>
-    );
+    return <div className="ledger-empty-note">{emptyMessage}</div>;
   }
 
   return (
@@ -37,6 +34,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           members={members}
           displayCurrency={displayCurrency}
           customRates={customRates}
+          onEditExpense={onEditExpense}
           onDeleteExpense={onDeleteExpense}
         />
       ))}

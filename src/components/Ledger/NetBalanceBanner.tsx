@@ -1,51 +1,36 @@
 import React from 'react';
 import type { CurrencyCode } from '../../types';
 import { formatCurrency } from '../../services';
-import { ArrowUpRight, ArrowDownLeft, CheckCircle2 } from 'lucide-react';
 
 interface NetBalanceBannerProps {
   netBalance: number;
   displayCurrency: CurrencyCode;
-  tripName: string;
   currentMemberName?: string;
-  onOpenTripManager: () => void;
+}
+
+/** Phrases the caption in the first person when we don't know the traveler's name. */
+function caption(name: string, isOwed: boolean, owes: boolean): string {
+  if (!isOwed && !owes) return 'Settled up';
+  const isSelf = name === 'You';
+  if (isOwed) return isSelf ? 'You are owed' : `${name} is owed`;
+  return isSelf ? 'You owe' : `${name} owes`;
 }
 
 export const NetBalanceBanner: React.FC<NetBalanceBannerProps> = ({
   netBalance,
   displayCurrency,
-  tripName,
   currentMemberName = 'You',
-  onOpenTripManager,
 }) => {
   const isOwed = netBalance > 0.5;
   const owes = netBalance < -0.5;
+  const firstName = currentMemberName.split(' ')[0];
   const absFormatted = formatCurrency(Math.abs(netBalance), displayCurrency);
 
   return (
-    <div className="net-balance-banner glass-card" onClick={onOpenTripManager} style={{ cursor: 'pointer' }}>
-      <div className="banner-top-row">
-        <div className="banner-group-title">
-          <span className="group-badge">Active Ledger</span>
-          <h2>{tripName}</h2>
-        </div>
-        <div className="status-indicator-chip">
-          {isOwed && <ArrowUpRight size={14} className="icon-green" />}
-          {owes && <ArrowDownLeft size={14} className="icon-red" />}
-          {!isOwed && !owes && <CheckCircle2 size={14} className="icon-muted" />}
-          <span className={isOwed ? 'text-green' : owes ? 'text-red' : ''}>
-            {isOwed ? 'Owed' : owes ? 'Owe' : 'Settled'}
-          </span>
-        </div>
-      </div>
-
-      <div className="banner-main-amount">
-        <span className="banner-sublabel">
-          {isOwed ? `Overall ${currentMemberName} are owed` : owes ? `Overall ${currentMemberName} owe` : `${currentMemberName} are completely settled up`}
-        </span>
-        <div className={`banner-figure font-mono ${isOwed ? 'positive' : owes ? 'negative' : ''}`}>
-          {isOwed ? `+${absFormatted}` : owes ? `-${absFormatted}` : '$0.00'}
-        </div>
+    <div className="net-balance-block">
+      <div className="net-balance-caption">{caption(firstName, isOwed, owes)}</div>
+      <div className={`net-balance-figure ${isOwed ? 'positive' : owes ? 'negative' : ''}`}>
+        {isOwed ? `+${absFormatted}` : owes ? `-${absFormatted}` : formatCurrency(0, displayCurrency)}
       </div>
     </div>
   );

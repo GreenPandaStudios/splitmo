@@ -1,0 +1,183 @@
+/* App shell, section scaffolding, bottom nav, FAB and toast. */
+.app-shell {
+  max-width: 600px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+@media (min-width: 632px) {
+  .app-shell {
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+  }
+}
+
+.app-main-content {
+  flex: 1;
+  padding-bottom: calc(var(--nav-height) + 24px);
+}
+
+.view-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  animation: sm-fade 0.25s ease;
+}
+
+.section-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.section-sub {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+
+.section-body {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Legacy card surface — the paper theme keeps it flat, ruled rather than filled. */
+.glass-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+
+.empty-state-box {
+  border: 1.5px dashed var(--rule-dash);
+  border-radius: var(--radius-md);
+  padding: 26px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-mute);
+}
+
+.empty-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.empty-subtext {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+}
+
+/* Bottom tab bar */
+.nav-tabs-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-top: 1.5px dashed var(--rule-dash-strong);
+  z-index: 99;
+}
+
+.nav-tabs-track {
+  display: flex;
+  background: var(--paper-sunk);
+  border-radius: 26px;
+  padding: 4px;
+}
+
+.nav-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 4px;
+  border-radius: 22px;
+  border: none;
+  background: transparent;
+  color: var(--ink-sub);
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-tab-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Add-expense floating button */
+.add-expense-fab {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 16px);
+  right: max(20px, calc(50vw - 280px));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.add-expense-fab:hover { background: var(--ink-hover); }
+.add-expense-fab:active { transform: scale(0.94); }
+
+/* Transient confirmation toast */
+.app-toast {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 12px);
+  left: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  animation: sm-toast 1.8s ease forwards;
+  pointer-events: none;
+  z-index: 300;
+}

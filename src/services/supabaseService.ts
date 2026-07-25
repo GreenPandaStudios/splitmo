@@ -32,8 +32,8 @@ export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promis
     return data
       .map((row) => row.data as TripGroup)
       .filter((t) => {
-        if (!t || !t.id || !t.name || !Array.isArray(t.members)) return false;
-        if (t.id.startsWith('trip_sp_') || t.expenses?.length > 10) return false;
+        if (!t || !t.id || !t.name || !Array.isArray(t.members) || !Array.isArray(t.expenses)) return false;
+        if (t.id.startsWith('trip_sp_')) return false;
         return !t.members.some((m) => /^[-+]?\d/.test(m.name?.trim() || ''));
       });
   } catch (err) {
@@ -43,7 +43,7 @@ export async function fetchAllTripsFromSupabase(config?: SupabaseConfig): Promis
 }
 
 export async function syncTripToSupabase(config: SupabaseConfig | undefined, trip: TripGroup): Promise<boolean> {
-  if (!trip || trip.id.startsWith('trip_sp_') || trip.expenses?.length > 10) return false;
+  if (!trip || trip.id.startsWith('trip_sp_')) return false;
   const client = getSupabaseClient(config);
   if (!client) return false;
   try {
@@ -67,7 +67,7 @@ export async function syncTripToSupabase(config: SupabaseConfig | undefined, tri
 export function subscribeToTripSupabase(
   config: SupabaseConfig | undefined,
   tripId: string,
-  onRemoteUpdate: (trip: TripGroup) => void
+  onRemoteUpdate: (trip: TripGroup, updatedAt?: string) => void
 ): (() => void) | null {
   const client = getSupabaseClient(config);
   if (!client) return null;
@@ -79,7 +79,7 @@ export function subscribeToTripSupabase(
       { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` },
       (payload) => {
         if (payload.new?.data && !payload.new.id.startsWith('trip_sp_')) {
-          onRemoteUpdate(payload.new.data as TripGroup);
+          onRemoteUpdate(payload.new.data as TripGroup, payload.new.updated_at as string | undefined);
         }
       }
     )

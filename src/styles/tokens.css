@@ -1,0 +1,106 @@
+/* Field Ledger design tokens — warm paper, ink, two signal colours. */
+:root {
+  --paper: oklch(97% 0.014 80);
+  --paper-sunk: oklch(94% 0.02 80);
+  --paper-chip: oklch(93% 0.02 80);
+  --paper-outer: oklch(91% 0.012 80);
+
+  --ink: oklch(20% 0.02 75);
+  --ink-hover: oklch(28% 0.02 75);
+  --ink-soft: oklch(30% 0.02 75);
+  --ink-sub: oklch(45% 0.02 75);
+  --ink-mute: oklch(50% 0.02 75);
+  --ink-faint: oklch(55% 0.02 75);
+  --ink-ghost: oklch(65% 0.02 75);
+
+  --rule: oklch(88% 0.015 75);
+  --rule-strong: oklch(85% 0.02 75);
+  --rule-dash: oklch(80% 0.02 75);
+  --rule-dash-strong: oklch(78% 0.02 75);
+  --track: oklch(90% 0.015 75);
+
+  --credit: oklch(50% 0.13 150);
+  --credit-deep: oklch(42% 0.14 150);
+  --debit: oklch(53% 0.16 35);
+
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+
+  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-pill: 20px;
+
+  --nav-height: 92px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--paper-outer);
+}
+
+body {
+  background: var(--paper-outer);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--credit);
+}
+
+a:hover {
+  color: var(--credit-deep);
+}
+
+@keyframes sm-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sm-toast {
+  0% { opacity: 0; transform: translate(-50%, 8px); }
+  12% { opacity: 1; transform: translate(-50%, 0); }
+  88% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 8px); }
+}
+
+@keyframes sm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Shared type + colour utilities */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.font-mono { font-family: var(--font-mono); }
+.font-display { font-family: var(--font-display); }
+
+.text-green, .icon-green, .positive { color: var(--credit); }
+.text-red, .icon-red, .negative { color: var(--debit); }
+.icon-muted { color: var(--ink-faint); }
+.icon-blue { color: var(--ink-sub); }
+.text-highlight { color: var(--credit); font-weight: 700; }
+
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+.full-width { width: 100%; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+
+.spinning-icon { animation: sm-spin 1s linear infinite; }
+.slide-up { animation: sm-fade 0.3s ease; }

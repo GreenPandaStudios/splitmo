@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import type { Expense, Member, CurrencyCode } from '../../types';
 import { formatCurrency, convertCurrency } from '../../services';
-import { Utensils, Fuel, Home, ShoppingCart, Mountain, Car, CreditCard, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { categoryMeta, categoryColor } from './categoryMeta';
+import { Pencil, X } from 'lucide-react';
 
 interface ExpenseCardProps {
   expense: Expense;
   members: Member[];
   displayCurrency: CurrencyCode;
   customRates?: Record<string, number>;
+  onEditExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
 }
 
@@ -16,6 +18,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   members,
   displayCurrency,
   customRates,
+  onEditExpense,
   onDeleteExpense,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -25,75 +28,63 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({
   const primaryAmountStr = formatCurrency(convertedAmount, displayCurrency);
 
   const parsedDate = new Date(expense.date);
-  const month = isNaN(parsedDate.getTime()) ? 'EXP' : parsedDate.toLocaleString('en-US', { month: 'short' });
-  const day = isNaN(parsedDate.getTime()) ? '1' : parsedDate.getDate();
+  const isValidDate = !isNaN(parsedDate.getTime());
+  const month = isValidDate ? parsedDate.toLocaleString('en-US', { month: 'short' }) : '—';
+  const day = isValidDate ? parsedDate.getDate() : '·';
 
-  const CategoryIcon = getCategoryIcon(expense.category);
+  const meta = categoryMeta(expense.category);
+  const stampColor = categoryColor(meta.hue);
+  const toggle = () => setIsExpanded(!isExpanded);
 
   return (
-    <div className="splitwise-expense-item" style={{ flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-        <div className="expense-item-left" onClick={() => setIsExpanded(!isExpanded)} style={{ cursor: 'pointer' }}>
+    <div className="splitwise-expense-item">
+      <div className="expense-row-main">
+        <div className="expense-item-left" onClick={toggle}>
           <div className="date-stack">
             <span className="date-month">{month}</span>
             <span className="date-day">{day}</span>
           </div>
 
-          <div className="category-icon-box">
-            <CategoryIcon size={18} />
-          </div>
+          <span className="category-tag" style={{ color: stampColor }} title={meta.label}>
+            {meta.abbr}
+          </span>
 
           <div className="expense-item-details">
             <h3 className="expense-title">{expense.title}</h3>
-            <span className="expense-payer-sub">{payer} paid {primaryAmountStr}</span>
+            <span className="expense-payer-sub">{payer.split(' ')[0]} paid</span>
           </div>
         </div>
 
         <div className="expense-item-right">
-          <div className="splitwise-share-box" onClick={() => setIsExpanded(!isExpanded)} style={{ cursor: 'pointer' }}>
-            <span className="share-label">Total</span>
-            <span className="share-val lent">{primaryAmountStr}</span>
-          </div>
-
-          <button className="delete-btn-icon" onClick={() => setIsExpanded(!isExpanded)} title="Toggle details">
-            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-
-          <button className="delete-btn-icon" onClick={() => onDeleteExpense(expense.id)} title="Delete expense">
-            <Trash2 size={15} />
+          <span className="expense-amount">{primaryAmountStr}</span>
+          <button className="delete-btn-icon" onClick={() => onDeleteExpense(expense.id)} title="Remove entry">
+            <X size={15} />
           </button>
         </div>
       </div>
 
       {isExpanded && (
-        <div className="expense-splits-expanded-box" style={{ background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: '6px', width: '100%', fontSize: '12px' }}>
-          <span className="input-label">Member Shares:</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '6px', marginTop: '4px' }}>
+        <>
+          <div className="expense-splits-expanded-box">
             {expense.splits.map((s) => {
               const memberName = members.find((m) => m.id === s.memberId)?.name || 'Member';
               const splitVal = convertCurrency(s.amount, expense.currency, displayCurrency, customRates);
               return (
-                <div key={s.memberId} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Space Mono', color: '#8c9ba5' }}>
-                  <span>{memberName}:</span>
+                <div key={s.memberId} className="split-detail-row">
+                  <span>{memberName.split(' ')[0]}</span>
                   <strong>{formatCurrency(splitVal, displayCurrency)}</strong>
                 </div>
               );
             })}
           </div>
-        </div>
+
+          <div className="expense-expanded-actions">
+            <button className="btn-secondary-small" onClick={() => onEditExpense(expense)}>
+              <Pencil size={12} /> Edit entry
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
 };
-
-function getCategoryIcon(category: string) {
-  switch (category) {
-    case 'food': return Utensils;
-    case 'gas': return Fuel;
-    case 'lodging': return Home;
-    case 'groceries': return ShoppingCart;
-    case 'activities': return Mountain;
-    case 'transport': return Car;
-    default: return CreditCard;
-  }
-}

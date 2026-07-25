@@ -50,19 +50,19 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
                 const isActive = t.id === activeTripId;
                 const isConfirming = deletingId === t.id;
                 return (
-                  <div key={t.id} className={`trip-selector-card ${isActive ? 'active' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-input)', borderRadius: '8px', marginBottom: '6px' }}>
+                  <div key={t.id} className={`trip-selector-card ${isActive ? 'active' : ''}`}>
                     <div className="trip-card-left" onClick={() => { onSelectTrip(t.id); onClose(); }} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <MapPin size={16} className={isActive ? 'icon-blue' : 'icon-muted'} />
                       <div>
-                        <h4 className="trip-card-title" style={{ fontSize: '13px', fontWeight: 600 }}>{t.name}</h4>
-                        <p className="trip-card-sub" style={{ fontSize: '11px', color: 'var(--text-sub)' }}>{t.expenses.length} expenses • {t.members.length} members</p>
+                        <h4 className="trip-card-title">{t.name}</h4>
+                        <p className="trip-card-sub">{t.expenses.length} expenses • {t.members.length} members</p>
                       </div>
                     </div>
 
                     <div className="trip-card-right" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {isActive && <span className="badge-pill active-badge" style={{ fontSize: '10px' }}><Check size={11} /> Active</span>}
+                      {isActive && <span className="badge-pill active-badge"><Check size={11} /> Active</span>}
                       {isConfirming ? (
-                        <button className="btn-secondary-small" style={{ background: '#ef4444', color: '#fff' }} onClick={() => handleConfirmDelete(t.id)}>
+                        <button className="btn-secondary-small btn-danger" onClick={() => handleConfirmDelete(t.id)}>
                           <AlertTriangle size={12} /> Confirm Delete
                         </button>
                       ) : (

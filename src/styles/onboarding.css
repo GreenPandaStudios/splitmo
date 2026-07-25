@@ -1,0 +1,114 @@
+/* Full-bleed onboarding / new-trip screen. */
+.onboarding-container {
+  min-height: 100vh;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  padding: 56px 26px calc(32px + env(safe-area-inset-bottom));
+  animation: sm-fade 0.3s ease;
+}
+
+.onboarding-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 38px;
+  line-height: 1.05;
+  margin-top: 6px;
+}
+
+.onboarding-sub {
+  font-size: 14px;
+  color: var(--ink-sub);
+  margin-top: 8px;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 34px;
+}
+
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboarding-field > label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-sub);
+}
+
+.onboarding-spacer { flex: 1; min-height: 26px; }
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-quiet {
+  background: transparent;
+  border: none;
+  color: var(--ink-sub);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.btn-quiet:hover { color: var(--ink); }
+
+.onboarding-import-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 26px;
+}
+
+.import-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1.5px dashed var(--rule-dash);
+  border-radius: var(--radius-md);
+  padding: 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-sub);
+  cursor: pointer;
+  background: transparent;
+}
+
+.import-link:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.app-loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--paper);
+  color: var(--ink-sub);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

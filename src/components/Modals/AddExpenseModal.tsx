@@ -23,6 +23,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [paidBy, setPaidBy] = useState<string>(initialData?.paidByMemberId || members[0]?.id || '');
   const [category, setCategory] = useState<ExpenseCategory>(initialData?.category || 'food');
   const [splitType, setSplitType] = useState<SplitType>(initialData?.splitType || 'equal');
+  // Existing entries may carry a full ISO timestamp; <input type="date"> needs the date part only.
+  const [date, setDate] = useState<string>((initialData?.date || new Date().toISOString()).split('T')[0]);
   const [splits, setSplits] = useState<SplitShare[]>(initialData?.splits || members.map((m) => ({ memberId: m.id, amount: 0 })));
 
   if (!isOpen) return null;
@@ -30,7 +32,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(amount);
-    if (!title || isNaN(numAmount) || numAmount <= 0 || !paidBy) return;
+    if (!title || isNaN(numAmount) || numAmount <= 0 || !paidBy || !date) return;
 
     const finalSplits = splitType === 'equal'
       ? members.map((m) => ({ memberId: m.id, amount: Math.round((numAmount / (members.length || 1)) * 100) / 100 }))
@@ -42,9 +44,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       amountInISK: convertCurrency(numAmount, currency, 'ISK', customRates),
       amountInUSD: convertCurrency(numAmount, currency, 'USD', customRates),
       exchangeRateUsed: customRates?.[currency] || 1, paidByMemberId: paidBy,
-      date: initialData?.date || new Date().toISOString().split('T')[0],
+      date,
       category, splitType, splits: finalSplits,
-      createdAt: new Date().toISOString(),
+      createdAt: initialData?.createdAt || new Date().toISOString(),
     };
 
     onSaveExpense(newExpense);
@@ -55,7 +57,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     <div className="modal-backdrop">
       <div className="modal-content glass-card slide-up">
         <div className="modal-header">
-          <h2>{initialData?.id ? 'Edit Expense' : 'Add New Expense 💳'}</h2>
+          <h2>{initialData?.id ? 'Edit Entry' : 'Add New Expense'}</h2>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
@@ -81,12 +83,19 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           </div>
 
+          <div className="form-group">
+            <label className="input-label">Date</label>
+            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="text-input" />
+          </div>
+
           <CategoryPayerSelector paidBy={paidBy} onPaidByChange={setPaidBy} category={category} onCategoryChange={setCategory} members={members} />
           <SplitSelector splitType={splitType} onSplitTypeChange={setSplitType} members={members} splits={splits} onUpdateSplit={(mId, val) => setSplits((prev) => prev.map((s) => (s.memberId === mId ? { ...s, amount: val } : s)))} totalAmount={parseFloat(amount) || 0} currency={currency} />
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary"><Plus size={16} /> Save Expense</button>
+            <button type="submit" className="btn-primary">
+              {initialData?.id ? 'Save Changes' : <><Plus size={16} /> Save Expense</>}
+            </button>
           </div>
         </form>
       </div>
